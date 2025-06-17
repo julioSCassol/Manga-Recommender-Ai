@@ -1,9 +1,9 @@
-# api_client.py
 import requests
 from datetime import datetime, timedelta
 import time
 import logging
 from typing import Dict, List, Optional
+from dateutil import parser
 
 # Configure logging
 logging.basicConfig(
@@ -125,7 +125,7 @@ class MangaAPIClient:
                     'year': attributes.get('year'),
                     'authors': self._safe_get_creators(relationships, 'author'),
                     'artists': self._safe_get_creators(relationships, 'artist'),
-                    'last_updated': attributes.get('updatedAt'),
+                    'last_updated': parser.parse(attributes.get('updatedAt')) if attributes.get('updatedAt') else None,
                     'genres': [tag['attributes']['name']['en'] 
                               for tag in self._filter_relationships(relationships, 'tag')
                               if tag.get('attributes', {}).get('name', {}).get('en')],

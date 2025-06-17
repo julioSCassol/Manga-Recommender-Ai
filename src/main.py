@@ -1,5 +1,5 @@
-from api_client import MangaAPIClient
-from ai_interface import AISession
+from .api_client import MangaAPIClient
+from .ai_interface import AISession
 import json
 
 def main():

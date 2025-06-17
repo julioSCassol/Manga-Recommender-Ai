@@ -1,4 +1,6 @@
 requests
-datetime
 numpy
-sklearn
+scikit-learn
+flask
+flask-cors
+python-dateutil

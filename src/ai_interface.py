@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from recommender import MangaRecommender
+from .recommender import MangaRecommender
 
 class AISession:
     def __init__(self, api_client):

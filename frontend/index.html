@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recomendador de Mangás com IA</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fas fa-book-open logo-icon"></i>
+            <div class="logo-text">MangaIA</div>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active">Início</a></li>
+                <li><a href="#">Biblioteca</a></li>
+                <li><a href="#">Gêneros</a></li>
+                <li><a href="#">Favoritos</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="tagline">Recomendações com Inteligência Artificial</div>
+        <h1>Descubra Seu Próximo Mangá Favorito</h1>
+        <p>Nosso sistema avançado de IA analisa milhares de títulos para encontrar o mangá perfeito com base nas suas preferências. Curta o que gostar para melhorar ainda mais as recomendações!</p>
+    </section>
+
+    <div class="container">
+        <div class="section-title">
+            <i class="fas fa-fire"></i>
+            <h2>Recomendados Para Você</h2>
+        </div>
+        
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Inicializando o sistema de IA. Isso pode levar alguns instantes...</p>
+        </div>
+        
+        <div class="manga-grid" id="manga-container"></div>
+        
+        <div class="refresh-container">
+            <button id="refresh-btn">
+                <i class="fas fa-sync-alt"></i>
+                Obter Novas Recomendações
+            </button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Sistema de Recomendação MangaIA. Todos os dados de mangás fornecidos pela API do MangaDex.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
