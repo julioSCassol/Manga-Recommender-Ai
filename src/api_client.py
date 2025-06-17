@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import time
 import logging
 from typing import Dict, List, Optional
+from dateutil import parser
 
 
 class MangaAPIClient:
@@ -119,7 +120,7 @@ class MangaAPIClient:
                     'year': attributes.get('year'),
                     'authors': self._safe_get_creators(relationships, 'author'),
                     'artists': self._safe_get_creators(relationships, 'artist'),
-                    'last_updated': attributes.get('updatedAt'),
+                    'last_updated': parser.parse(attributes.get('updatedAt')) if attributes.get('updatedAt') else None,
                     'genres': [
                         tag['attributes']['name'].get('en') or next(
                             iter(tag['attributes']['name'].values()))
@@ -162,12 +163,10 @@ class MangaAPIClient:
                 return response
             except requests.exceptions.RequestException as e:
                 if attempt < retries:
-                    logging.warning(
-                        f"Attempt {attempt + 1}/{retries} failed: {str(e)}")
+                    logging.warning(f"Attempt {attempt + 1}/{retries} failed: {str(e)}")
                     time.sleep(self.retry_delay * (attempt + 1))
                 else:
-                    logging.error(f"Request failed after {
-                                  retries} attempts: {str(e)}")
+                    logging.error(f"Request failed after {retries} attempts: {str(e)}")
                     return None
             except Exception as e:
                 logging.error(f"Unexpected error: {str(e)}")
@@ -245,12 +244,10 @@ class MangaAPIClient:
                 'stats': self._get_statistics(manga.get('id', ''))
             }
         except KeyError as e:
-            logging.error(f"Error processing manga details due to missing key: {
-                          str(e)} in {manga.get('id')}")
+            logging.error(f"Error processing manga details due to missing key: {str(e)} in {manga.get('id')}")
             return None
         except Exception as e:
-            logging.error(f"Unexpected error processing manga details for {
-                          manga.get('id')}: {str(e)}")
+            logging.error(f"Unexpected error processing manga details for {manga.get('id')}: {str(e)}")
             return None
 
     def _filter_relationships(self, relationships: List[Dict], type_: str) -> List[Dict]:

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manga AI Recommender</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fas fa-book-open logo-icon"></i>
+            <div class="logo-text">MangaAI</div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="tagline">AI-Powered Recommendations</div>
+        <h1>Discover Your Next Favorite Manga</h1>
+        <p>Our advanced AI analyzes thousands of titles to find the perfect manga based on your preferences. Like what you see to get even better recommendations!</p>
+    </section>
+
+    <div class="container">
+        <div class="section-title">
+            <i class="fas fa-fire"></i>
+            <h2>Recommended For You</h2>
+        </div>
+        
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Initializing AI system. This may take a moment...</p>
+        </div>
+        
+        <div class="manga-grid" id="manga-container"></div>
+        
+        <div class="refresh-container">
+            <button id="refresh-btn">
+                <i class="fas fa-sync-alt"></i>
+                Get Better Recommendations
+            </button>
+        </div>
+    </div>
+
+    <div id="manga-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 MangaAI Recommender System. All manga data provided by MangaDex API.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
