@@ -138,7 +138,7 @@ class MangaAPIClient:
                     'content_rating': attributes.get('contentRating'),
                     'publication_type': attributes.get('publicationDemographic'),
                     'status': attributes.get('status'),
-                    'cover_art': self._safe_find_cover_art(relationships),
+                    'cover_art': self._safe_find_cover_art(relationships, manga.get('id', '')),
                     'stats': self._get_statistics(manga.get('id', ''))
                 })
 
@@ -163,10 +163,12 @@ class MangaAPIClient:
                 return response
             except requests.exceptions.RequestException as e:
                 if attempt < retries:
-                    logging.warning(f"Attempt {attempt + 1}/{retries} failed: {str(e)}")
+                    logging.warning(
+                        f"Attempt {attempt + 1}/{retries} failed: {str(e)}")
                     time.sleep(self.retry_delay * (attempt + 1))
                 else:
-                    logging.error(f"Request failed after {retries} attempts: {str(e)}")
+                    logging.error(f"Request failed after {
+                                  retries} attempts: {str(e)}")
                     return None
             except Exception as e:
                 logging.error(f"Unexpected error: {str(e)}")
@@ -240,14 +242,16 @@ class MangaAPIClient:
                 'content_rating': attributes.get('contentRating'),
                 'publication_type': attributes.get('publicationDemographic'),
                 'status': attributes.get('status'),
-                'cover_art': self._safe_find_cover_art(relationships),
+                'cover_art': self._safe_find_cover_art(relationships, manga.get('id', '')),
                 'stats': self._get_statistics(manga.get('id', ''))
             }
         except KeyError as e:
-            logging.error(f"Error processing manga details due to missing key: {str(e)} in {manga.get('id')}")
+            logging.error(f"Error processing manga details due to missing key: {
+                          str(e)} in {manga.get('id')}")
             return None
         except Exception as e:
-            logging.error(f"Unexpected error processing manga details for {manga.get('id')}: {str(e)}")
+            logging.error(f"Unexpected error processing manga details for {
+                          manga.get('id')}: {str(e)}")
             return None
 
     def _filter_relationships(self, relationships: List[Dict], type_: str) -> List[Dict]:
@@ -272,12 +276,20 @@ class MangaAPIClient:
 
         return "Unknown"
 
-    def _safe_find_cover_art(self, relationships: List[Dict]) -> Optional[str]:
+    def _safe_find_cover_art(self, relationships: List[Dict], mangaId) -> Optional[str]:
         """Find cover art URL safely"""
         try:
             cover_art = next(
                 (r for r in relationships if r.get('type') == 'cover_art'), None)
-            return f"https://mangadex.org/covers/{cover_art['id']}" if cover_art else None
+            r = self._safe_request(
+                'GET',
+                f"https://api.mangadex.org/cover/{cover_art['id']}"
+            )
+            data = r.json()
+            # r = f"https://api.mangadex.org/cover/{cover_art['id']}"
+            imageUrl = data.get('data', {}).get('attributes', {}).get('fileName')
+            print(imageUrl)
+            return f"https://mangadex.org/covers/{mangaId}/{imageUrl}" if cover_art else None
         except Exception as e:
             logging.warning(f"Failed to find cover art: {str(e)}")
             return None
