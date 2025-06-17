@@ -141,6 +141,7 @@ class MangaAPIClient:
                     'cover_art': self._safe_find_cover_art(relationships, manga.get('id', '')),
                     'stats': self._get_statistics(manga.get('id', ''))
                 })
+                print(attributes)
 
             except KeyError as e:
                 logging.warning(f"Skipping manga due to missing key: {str(e)}")
@@ -286,9 +287,7 @@ class MangaAPIClient:
                 f"https://api.mangadex.org/cover/{cover_art['id']}"
             )
             data = r.json()
-            # r = f"https://api.mangadex.org/cover/{cover_art['id']}"
             imageUrl = data.get('data', {}).get('attributes', {}).get('fileName')
-            print(imageUrl)
             return f"https://mangadex.org/covers/{mangaId}/{imageUrl}" if cover_art else None
         except Exception as e:
             logging.warning(f"Failed to find cover art: {str(e)}")

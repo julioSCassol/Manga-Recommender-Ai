@@ -21,40 +21,31 @@ logging.basicConfig(level=logging.INFO)
 def create_session():
     try:
         api = MangaAPIClient()
+        api = MangaAPIClient()
         ai_session = AISession(api)
-
-        # Start AI session with initial preferences
         ai_session.start_session()
 
-        # Set initial preferences based on AI_CONFIG
-        initial_prefs = {
+        initial_user_prefs = {
             'keywords': ['action', 'fantasy', 'magic'],
             'genres': ['Action', 'Fantasy', 'Adventure'],
             'themes': ['Adventure', 'Fantasy'],
-            'preferred_demographics': ['shonen', 'seinen']
+            'preferred_publication_types': ['shoujo']
         }
 
-        # Add to user_profile with the correct key
-        ai_session.user_profile = {
-            'initial_prefs': initial_prefs
-        }
+        ai_session.user_profile['initial_prefs'] = initial_user_prefs
 
-        # Log the initial preferences
-        app.logger.info(f"Initial preferences: {initial_prefs}")
+        app.logger.info(f"Initial preferences: {initial_user_prefs}")
 
-        # Get initial recommendations
-        indices = ai_session.get_recommendations()
-        app.logger.info(f"Recommendation indices: {indices}")
+        initial_indices = ai_session.recommender.find_similar(
+            initial_user_prefs, n=10)
 
-        if not indices:
-            # If still empty, return first 10 manga as fallback
+        if not initial_indices:
             app.logger.warning("Using fallback recommendations")
             indices = list(range(min(10, len(ai_session.recommender.data))))
 
         recommendations = [ai_session.recommender.data[i]
-                           for i in indices[:10]]
+                           for i in initial_indices]
 
-        # Store session
         session_id = str(uuid.uuid4())
         sessions[session_id] = ai_session
 
@@ -79,7 +70,6 @@ def get_recommendations():
     ai_session = sessions[session_id]
 
     try:
-        # Convert manga IDs to indices
         manga_ids = [m['id'] for m in ai_session.recommender.data]
         indices = []
         for id in likes:
@@ -89,10 +79,8 @@ def get_recommendations():
             except ValueError:
                 logging.warning(f"Manga ID {id} not found in dataset")
 
-        # Update preferences based on user likes
         ai_session.update_preferences(indices)
 
-        # Get new recommendations
         new_indices = ai_session.get_recommendations()
         recommendations = [ai_session.recommender.data[i]
                            for i in new_indices[:10]]

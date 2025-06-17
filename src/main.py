@@ -69,8 +69,6 @@ def main():
             'similarity_reason': ai_session.get_similarity_reason(i)
         } for i in personalized_indices[:10]]
 
-        print(json.dumps(personalized_results, indent=2, ensure_ascii=False))
-
     except KeyboardInterrupt:
         print("\nOperação cancelada pelo usuário.")
     except Exception as e:
