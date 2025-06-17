@@ -11,7 +11,6 @@ class AISession:
         self.scaler = MinMaxScaler()
 
     def start_session(self):
-        # Busca dados com todos os campos necessários
         initial_data = self.api.search_manga({
             'content_rating': ['safe', 'suggestive'],
             'includes': ['author', 'artist', 'tag'],
@@ -19,15 +18,12 @@ class AISession:
         })
 
         if initial_data and isinstance(initial_data, list):
-            # Processa os dados para incluir todos os campos
             processed_data = []
             for i, manga_summary in enumerate(initial_data):
                 manga_id = manga_summary.get('id')
                 if manga_id:
                     full_manga_details = self.api.get_manga_details(manga_id)
                     if full_manga_details:
-                        # Now, full_manga_details is already processed by _process_full_details
-                        # so it has the 'genres' and 'themes' lists correctly populated.
                         processed_data.append(full_manga_details)
                     else:
                         print(
@@ -93,7 +89,6 @@ class AISession:
 
         data = self.recommender.data
 
-        # Normaliza anos (1960-2023)
         years = np.array([m.get('year', 2000)
                          for m in data if m.get('year') is not None]).reshape(-1, 1)
         if len(years) > 0:
@@ -102,7 +97,6 @@ class AISession:
                 if i < len(normalized_years):
                     manga['normalized_year'] = normalized_years[i]
 
-        # Normaliza ratings (0-10)
         ratings = np.array([m.get('rating', 0) for m in data]).reshape(-1, 1)
         if len(ratings) > 0:
             normalized_ratings = self.scaler.fit_transform(ratings).flatten()
@@ -121,19 +115,16 @@ class AISession:
         if not liked_mangas:
             return
 
-        # Atualiza preferências de gênero
         genre_counts = {}
         for manga in liked_mangas:
             for genre in manga.get('genres', []):
                 genre_counts[genre] = genre_counts.get(genre, 0) + 1
 
-        # Atualiza preferências de tema
         theme_counts = {}
         for manga in liked_mangas:
             for theme in manga.get('themes', []):
                 theme_counts[theme] = theme_counts.get(theme, 0) + 1
 
-        # Atualiza preferências de autor/artista
         author_counts = {}
         artist_counts = {}
         for manga in liked_mangas:
@@ -142,7 +133,6 @@ class AISession:
             for artist in manga.get('artists', []):
                 artist_counts[artist] = artist_counts.get(artist, 0) + 1
 
-        # Calcula médias de preferência
         years = [m.get('year', 2000)
                  for m in liked_mangas if m.get('year') is not None]
         avg_year = np.mean(years) if years else None
@@ -150,7 +140,6 @@ class AISession:
         ratings = [m.get('rating', 0) for m in liked_mangas]
         avg_rating = np.mean(ratings) if ratings else None
 
-        # Atualiza perfil do usuário
         self.user_profile['preferences'] = {
             'genres': genre_counts,
             'themes': theme_counts,
@@ -177,53 +166,43 @@ class AISession:
             for idx, manga in enumerate(data):
                 score = 0
 
-                # Pontua por gêneros em comum
                 manga_genres = set(manga.get('genres', []))
                 pref_genres = set(prefs['genres'].keys())
                 genre_match = len(manga_genres & pref_genres)
                 score += genre_match * 2
 
-                # Pontua por temas em comum
                 manga_themes = set(manga.get('themes', []))
                 pref_themes = set(prefs['themes'].keys())
                 theme_match = len(manga_themes & pref_themes)
                 score += theme_match * 1.5
 
-                # Pontua por autor preferido
                 for author in manga.get('authors', []):
                     if author in prefs['authors']:
                         score += prefs['authors'][author] * 1.0
 
-                # Pontua por artista preferido
                 for artist in manga.get('artists', []):
                     if artist in prefs['artists']:
                         score += prefs['artists'][artist] * 1.0
 
-                # Pontua por ano próximo da média preferida
                 if prefs['avg_year'] and manga.get('year'):
                     year_diff = abs(manga['year'] - prefs['avg_year'])
                     score += max(0, 5 - year_diff / 5)
 
-                # Pontua por rating próximo da média
                 if prefs['avg_rating'] and manga.get('rating'):
                     rating_diff = abs(manga['rating'] - prefs['avg_rating'])
                     score += max(0, 5 - rating_diff)
 
-                # Pontua por conteúdo preferido
                 if manga.get('contentRating') in prefs['preferred_content_rating']:
                     score += 2
 
-                # Pontua por demografia preferida
                 if manga.get('demographic') in prefs['preferred_demographics']:
                     score += 1.5
 
-                # Pontua por status preferido
                 if manga.get('status') in prefs['preferred_status']:
                     score += 1
 
                 recommendations.append((idx, score))
 
-            # Ordena por score e pega os top 50
             recommendations.sort(key=lambda x: x[1], reverse=True)
             return [idx for idx, score in recommendations[:50]]
         else:
@@ -240,25 +219,21 @@ class AISession:
         prefs = self.user_profile['preferences']
         reasons = []
 
-        # Verifica gêneros em comum
         common_genres = set(manga.get('genres', [])) & set(
             prefs['genres'].keys())
         if common_genres:
             reasons.append(f"Gêneros similares: {', '.join(common_genres)}")
 
-        # Verifica temas em comum
         common_themes = set(manga.get('themes', [])) & set(
             prefs['themes'].keys())
         if common_themes:
             reasons.append(f"Temas similares: {', '.join(common_themes)}")
 
-        # Verifica autores em comum
         common_authors = set(manga.get('authors', [])) & set(
             prefs['authors'].keys())
         if common_authors:
             reasons.append(f"Autores similares: {', '.join(common_authors)}")
 
-        # Verifica ano próximo
         if prefs['avg_year'] and manga.get('year') and abs(manga['year'] - prefs['avg_year']) <= 5:
             reasons.append(f"Ano de publicação similar ({manga['year']})")
 

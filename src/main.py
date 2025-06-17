@@ -26,7 +26,7 @@ def main():
             'preferred_status': ['ongoing']
         }
         initial_indices = ai_session.recommender.find_similar(
-            initial_user_prefs, n=10)  # Get top 10
+            initial_user_prefs, n=10)
 
         print(f"Initial indices: {initial_indices}")
 
@@ -74,7 +74,6 @@ def main():
     except KeyboardInterrupt:
         print("\nOperação cancelada pelo usuário.")
     except Exception as e:
-        logging.exception("An error occurred during session:")
         print(f"\nErro: {str(e)}")
     finally:
         print("\nFim da sessão.")

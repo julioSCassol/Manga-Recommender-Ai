@@ -6,7 +6,6 @@ API_CONFIG = {
     }
 }
 
-# parametros
 AI_CONFIG = {
     'max_initial_results': 200,
     'similarity_threshold': 0.65

@@ -50,19 +50,15 @@ class MangaRecommender:
 
     def find_similar(self, user_preferences, n=10):
         """Content-based filtering"""
-        # filtra generos
         valid_genres = [g for g in user_preferences.get('genres', [])
                         if g in self.mlb.classes_]
 
-        # cria vetor de preferências
         pref_text = " ".join(user_preferences.get('keywords', []))
         pref_vector = self.tfidf.transform([pref_text])
         pref_genres = self.mlb.transform([valid_genres]) if valid_genres \
             else np.zeros((1, len(self.mlb.classes_)))
 
-        # combina features
         user_vector = hstack([pref_vector, pref_genres])
 
-        # calcula similaridade
         scores = cosine_similarity(user_vector, self.feature_matrix)
         return scores[0].argsort()[-n:][::-1].tolist()

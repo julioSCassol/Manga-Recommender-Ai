@@ -1,15 +1,8 @@
-# api_client.py
 import requests
 from datetime import datetime, timedelta
 import time
 import logging
 from typing import Dict, List, Optional
-
-# Configure logging
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
 
 
 class MangaAPIClient:
@@ -17,7 +10,7 @@ class MangaAPIClient:
         self.base_url = "https://api.mangadex.org"
         self.cache: Dict = {}
         self.max_cache_age = timedelta(minutes=max_cache_age)
-        self.request_timeout = 15  # em segundos
+        self.request_timeout = 15
         self.retry_delay = 3
         self.max_retries = 3
         self.session = requests.Session()
@@ -216,18 +209,15 @@ class MangaAPIClient:
             attributes = manga.get('attributes', {})
             relationships = manga.get('relationships', [])
 
-            # Extract tags directly from attributes.tags
             all_tags = attributes.get('tags', [])
             genres = []
             themes = []
-            # You could add other tag types if needed, e.g., content_warnings = []
 
             for tag in all_tags:
                 tag_attributes = tag.get('attributes', {})
                 tag_name_multilingual = tag_attributes.get('name', {})
                 tag_group = tag_attributes.get('group')
 
-                # Prioritize English, fallback to first available name
                 tag_name = tag_name_multilingual.get('en') or next(
                     iter(tag_name_multilingual.values()), 'Unknown Tag')
 
@@ -235,9 +225,6 @@ class MangaAPIClient:
                     genres.append(tag_name)
                 elif tag_group == 'theme':
                     themes.append(tag_name)
-                # Add more conditions for other groups if you want to categorize them further
-                # elif tag_group == 'content warning':
-                #     content_warnings.append(tag_name)
 
             return {
                 'id': manga.get('id', ''),
