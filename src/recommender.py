@@ -32,22 +32,19 @@ class MangaRecommender:
             if publication_type and isinstance(publication_type, str):
                 all_publication_types.add(publication_type)
             else:
-                logging.debug(f"Manga with ID {manga.get(
-                    'id', 'N/A')} has no valid publication_type: {publication_type}")
+                logging.debug(f"Manga with ID {manga.get('id', 'N/A')} has no valid publication_type: {publication_type}")
 
             content_rating = manga.get('contentRating')
             if content_rating and isinstance(content_rating, str):
                 all_content_ratings.add(content_rating)
             else:
-                logging.debug(f"Manga with ID {manga.get(
-                    'id', 'N/A')} has no valid contentRating: {content_rating}")
+                logging.debug(f"Manga with ID {manga.get('id', 'N/A')} has no valid contentRating: {content_rating}")
 
             status = manga.get('status')
             if status and isinstance(status, str):
                 all_statuses.add(status)
             else:
-                logging.debug(f"Manga with ID {manga.get(
-                    'id', 'N/A')} has no valid status: {status}")
+                logging.debug(f"Manga with ID {manga.get('id', 'N/A')} has no valid status: {status}")
 
         self.tfidf = TfidfVectorizer(
             stop_words='english',
@@ -56,12 +53,10 @@ class MangaRecommender:
         self.mlb_genres = MultiLabelBinarizer(classes=list(
             all_genres) if all_genres else ['unknown_genre'])
         self.mlb_publication_types = MultiLabelBinarizer(
-            classes=list(all_publication_types) if all_publication_types else [
-                'unknown_publication_type']
+            classes=list(all_publication_types) if all_publication_types else ['unknown_publication_type']
         )
         self.mlb_content_ratings = MultiLabelBinarizer(
-            classes=list(all_content_ratings) if all_content_ratings else [
-                'unknown_content_rating']
+            classes=list(all_content_ratings) if all_content_ratings else ['unknown_content_rating']
         )
         self.mlb_statuses = MultiLabelBinarizer(
             classes=list(all_statuses) if all_statuses else ['unknown_status']
@@ -112,13 +107,11 @@ class MangaRecommender:
     def recommend(self, manga_index, n=5):
         """Get similar manga recommendations (now includes publication_type indirectly)."""
         if not self.feature_matrix.shape[0] > manga_index:
-            logging.error(f"Manga index {manga_index} is out of bounds for feature matrix size {
-                          self.feature_matrix.shape[0]}")
+            logging.error(f"Manga index {manga_index} is out of bounds for feature matrix size {self.feature_matrix.shape[0]}")
             return []
 
         similarities = cosine_similarity(
-            self.feature_matrix[manga_index],
-            self.feature_matrix
+            self.feature_matrix[manga_index],self.feature_matrix
         )
         return similarities[0].argsort()[-n-1:-1][::-1].tolist()
 

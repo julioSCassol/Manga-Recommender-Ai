@@ -168,8 +168,7 @@ class MangaAPIClient:
                         f"Attempt {attempt + 1}/{retries} failed: {str(e)}")
                     time.sleep(self.retry_delay * (attempt + 1))
                 else:
-                    logging.error(f"Request failed after {
-                                  retries} attempts: {str(e)}")
+                    logging.error(f"Request failed after {retries} attempts: {str(e)}")
                     return None
             except Exception as e:
                 logging.error(f"Unexpected error: {str(e)}")
@@ -247,18 +246,16 @@ class MangaAPIClient:
                 'stats': self._get_statistics(manga.get('id', ''))
             }
         except KeyError as e:
-            logging.error(f"Error processing manga details due to missing key: {
-                          str(e)} in {manga.get('id')}")
+            logging.error(f"Error processing manga details due to missing key: {str(e)} in {manga.get('id')}")
             return None
         except Exception as e:
-            logging.error(f"Unexpected error processing manga details for {
-                          manga.get('id')}: {str(e)}")
+            logging.error(f"Unexpected error processing manga details for {manga.get('id')}: {str(e)}")
             return None
 
     def _filter_relationships(self, relationships: List[Dict], type_: str) -> List[Dict]:
         return [r for r in relationships if r.get('type') == type_]
 
-    def _get_creator_details(self, creator_id: str) -> str:
+    def _get_creator_details(self, creator_id: str) -> str: 
         """Get creator details with caching"""
         cache_key = f"creator_{creator_id}"
         if cache_key in self.cache:
