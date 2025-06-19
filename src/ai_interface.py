@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-from .recommender import MangaRecommender
 import logging
+from .recommender import MangaRecommender
 
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -23,24 +23,30 @@ class AISession:
         efficiently, avoiding individual get_manga_details calls for bulk loading.
         """
         logging.info("Starting AI session: Fetching initial manga data...")
-
-        initial_data = self.api.search_manga({
-            'content_rating': ['safe', 'suggestive'],
-            'limit': 500
-        })
-
-        if not initial_data:
-            raise ValueError("No initial manga data found from API search.")
-
-      #  logging.info(f"Received {len(initial_data)} manga entries from API search.")
-
-        if initial_data:
+        
+        try:
+            # Fetch initial manga data
+            initial_data = self.api.search_manga({
+                'content_rating': ['safe', 'suggestive'],
+                'limit': 500
+            })
+            
+            if not initial_data:
+                raise ValueError("No initial manga data found from API search.")
+            
+            # Initialize recommender
+            logging.info("Creating MangaRecommender instance...")
             self.recommender = MangaRecommender(initial_data)
+            logging.info(f"Initialized recommender with {len(initial_data)} manga entries")
+            
+            # Normalize features
             self._normalize_features()
-            logging.info(f"Successfully initialized recommender with {len(initial_data)} manga entries.")
-        else:
-            raise ValueError(
-                "No valid manga data processed from initial search.")
+            logging.info("Feature normalization complete")
+            
+        except Exception as e:
+            logging.error(f"Failed to initialize session: {str(e)}")
+            logging.exception("Full exception traceback:")
+            raise ValueError("Failed to initialize AI session") from e
 
     def _normalize_features(self):
         """Normalizes numerical features like year and rating."""
@@ -142,89 +148,23 @@ class AISession:
                 "Recommender not initialized or data is empty. Cannot generate recommendations.")
             return []
 
-        data = self.recommender.data
-        recommendations = []
-
+        # Use recommender for personalized results
         preferences = self.user_profile.get(
             'preferences') or self.user_profile.get('initial_prefs')
-
+        
         if preferences:
             logging.info("Generating recommendations using user preferences.")
-            logging.info(f"Top preference weights:")
-            logging.info(f"• Genres: {list(pref_genres)[:5]}")
-            logging.info(f"• Themes: {list(pref_themes)[:5]}")
-            for idx, manga in enumerate(data):
-                score = 0
-
-                manga_genres = set(manga.get('genres', []))
-                pref_genres = set()
-                if 'genres' in preferences:
-                    if isinstance(preferences['genres'], dict):
-                        pref_genres = set(preferences['genres'].keys())
-                    else:
-                        pref_genres = set(preferences['genres'])
-                genre_match = len(manga_genres & pref_genres)
-                score += genre_match * 2
-
-                manga_themes = set(manga.get('themes', []))
-                pref_themes = set()
-                if 'themes' in preferences:
-                    if isinstance(preferences['themes'], dict):
-                        pref_themes = set(preferences['themes'].keys())
-                    else:
-                        pref_themes = set(preferences['themes'])
-                theme_match = len(manga_themes & pref_themes)
-                score += theme_match * 1.5
-
-                if 'authors' in preferences:
-                    for author in manga.get('authors', []):
-                        if author in preferences['authors']:
-                            author_count = preferences['authors'][author] if isinstance(
-                                preferences['authors'], dict) else 1
-                            score += author_count * 1.0
-
-                if 'artists' in preferences:
-                    for artist in manga.get('artists', []):
-                        if artist in preferences['artists']:
-                            artist_count = preferences['artists'][artist] if isinstance(
-                                preferences['artists'], dict) else 1
-                            score += artist_count * 1.0
-
-                if 'avg_year' in preferences and preferences['avg_year'] is not None and manga.get('year') is not None:
-                    year_diff = abs(manga['year'] - preferences['avg_year'])
-                    score += max(0, 5 - year_diff / 5)
-
-                if 'avg_rating' in preferences and preferences['avg_rating'] is not None and manga.get('rating') is not None:
-                    rating_diff = abs(
-                        manga['rating'] - preferences['avg_rating'])
-                    score += max(0, 5 - rating_diff)
-
-                # Add points for publication type match
-                if 'preferred_publication_types' in preferences and manga.get('publication_type'):
-                    if manga['publication_type'] in preferences['preferred_publication_types']:
-                        score += 1.5
-
-                if 'preferred_content_rating' in preferences and manga.get('content_rating') and isinstance(preferences['preferred_content_rating'], list):
-                    if manga['content_rating'] in preferences['preferred_content_rating']:
-                        score += 2
-
-                if 'preferred_status' in preferences and manga.get('status') and isinstance(preferences['preferred_status'], list):
-                    if manga['status'] in preferences['preferred_status']:
-                        score += 1
-
-                recommendations.append((idx, score))
-
-        top_recs = [self.recommender.data[idx]['title'] for idx, _ in recommendations[:5]]
-        logging.info(f"Top 5 recommendations:")
-        for i, title in enumerate(top_recs, 1):
-            logging.info(f"{i}. {title}")
-
-            recommendations.sort(key=lambda x: x[1], reverse=True)
-            return [idx for idx, score in recommendations[:50]]
+            # Get recommendations based on preferences
+            indices = self.recommender.find_similar(preferences, n=50)
+            return [self.recommender.data[i] for i in indices]
         else:
             logging.info(
-                "No user preferences found in profile. Returning a default set of top 10 manga from the loaded data.")
-            return list(range(min(10, len(data))))
+                "No user preferences found in profile. Returning a default set of top manga from the loaded data.")
+            # Return top rated from the initial dataset, not from API
+            sorted_data = sorted(self.recommender.data, 
+                                key=lambda x: x.get('rating', 0), 
+                                reverse=True)
+            return sorted_data[:10]
 
     def get_similarity_reason(self, manga_idx):
         """

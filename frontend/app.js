@@ -19,14 +19,12 @@ let personalizedData = [];
 
 console.log("Frontend initialized");
 
-// Initialize the application
 async function initApp() {
     console.log("Initializing application...");
     await loadTopManga();
     setupEventListeners();
 }
 
-// Load top rated manga
 async function loadTopManga() {
     try {
         loadingElement.style.display = 'block';
@@ -51,7 +49,6 @@ async function loadTopManga() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize rating slider
     const ratingSlider = document.getElementById('min-rating');
     const ratingValue = document.getElementById('rating-value');
     
@@ -64,16 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Setup event listeners
 function setupEventListeners() {
-    // Questionnaire button
     questionnaireBtn.addEventListener('click', () => {
         topMangaSection.style.display = 'none';
         recommendationsSection.style.display = 'none';
         questionnaireSection.style.display = 'block';
     });
     
-    // Close questionnaire button
     closeQuestionnaireBtn.addEventListener('click', () => {
         questionnaireSection.style.display = 'none';
         topMangaSection.style.display = 'block';
@@ -81,13 +75,11 @@ function setupEventListeners() {
     
     preferenceForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        await submitQuestionnaire(); // Now calls the fixed function
+        await submitQuestionnaire(); 
     });
     
-    // Refresh recommendations
     refreshButton.addEventListener('click', refreshRecommendations);
     
-    // Modal close
     closeModal.addEventListener('click', () => {
         modal.style.display = 'none';
     });
@@ -99,7 +91,7 @@ function setupEventListeners() {
     });
 }
 
-async function submitQuestionnaire() { // Removed the event parameter
+async function submitQuestionnaire() {
     // Collect form data
     const genres = Array.from(document.querySelectorAll('input[name="genres"]:checked')).map(cb => cb.value);
     const themes = Array.from(document.querySelectorAll('input[name="themes"]:checked')).map(cb => cb.value);
