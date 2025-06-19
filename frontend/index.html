@@ -13,32 +13,292 @@
             <i class="fas fa-book-open logo-icon"></i>
             <div class="logo-text">MangaAI</div>
         </div>
+        <div class="header-actions">
+            <button id="questionnaire-btn" class="btn-secondary">
+                <i class="fas fa-clipboard-list"></i> Personalize Recommendations
+            </button>
+        </div>
     </header>
 
     <section class="hero">
         <div class="tagline">AI-Powered Recommendations</div>
         <h1>Discover Your Next Favorite Manga</h1>
-        <p>Our advanced AI analyzes thousands of titles to find the perfect manga based on your preferences. Like what you see to get even better recommendations!</p>
+        <p>Browse top-rated manga or personalize recommendations based on your preferences!</p>
     </section>
 
     <div class="container">
-        <div class="section-title">
-            <i class="fas fa-fire"></i>
-            <h2>Recommended For You</h2>
+        <!-- Improved Questionnaire Section -->
+        <div id="questionnaire-section" style="display: none;">
+            <div class="section-title">
+                <i class="fas fa-clipboard-list"></i>
+                <h2>Discover Your Perfect Manga</h2>
+                <button id="close-questionnaire" class="btn-icon">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="preference-form">
+                <div class="question-card">
+                    <div class="question-number">1</div>
+                    <div class="question-content">
+                        <h3>What genres do you enjoy?</h3>
+                        <div class="checkbox-grid">
+                            <label><input type="checkbox" name="genres" value="Action"> Action</label>
+                            <label><input type="checkbox" name="genres" value="Romance"> Romance</label>
+                            <label><input type="checkbox" name="genres" value="Fantasy"> Fantasy</label>
+                            <label><input type="checkbox" name="genres" value="Horror"> Horror</label>
+                            <label><input type="checkbox" name="genres" value="Comedy"> Comedy</label>
+                            <label><input type="checkbox" name="genres" value="Sci-Fi"> Sci-Fi</label>
+                            <label><input type="checkbox" name="genres" value="Mystery"> Mystery</label>
+                            <label><input type="checkbox" name="genres" value="Sports"> Sports</label>
+                            <label><input type="checkbox" name="genres" value="Slice of Life"> Slice of Life</label>
+                            <label><input type="checkbox" name="genres" value="Psychological"> Psychological</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-number">2</div>
+                    <div class="question-content">
+                        <h3>What themes interest you?</h3>
+                        <div class="checkbox-grid">
+                            <label><input type="checkbox" name="themes" value="Adventure"> Adventure</label>
+                            <label><input type="checkbox" name="themes" value="School Life"> School Life</label>
+                            <label><input type="checkbox" name="themes" value="Supernatural"> Supernatural</label>
+                            <label><input type="checkbox" name="themes" value="Isekai"> Isekai</label>
+                            <label><input type="checkbox" name="themes" value="Mecha"> Mecha</label>
+                            <label><input type="checkbox" name="themes" value="Martial Arts"> Martial Arts</label>
+                            <label><input type="checkbox" name="themes" value="Music"> Music</label>
+                            <label><input type="checkbox" name="themes" value="Cooking"> Cooking</label>
+                            <label><input type="checkbox" name="themes" value="Historical"> Historical</label>
+                            <label><input type="checkbox" name="themes" value="Cyberpunk"> Cyberpunk</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-number">3</div>
+                    <div class="question-content">
+                        <h3>What demographic do you prefer?</h3>
+                        <div class="option-cards">
+                            <label class="option-card">
+                                <input type="radio" name="demographic" value="shonen">
+                                <div class="card-content">
+                                    <i class="fas fa-bolt"></i>
+                                    <h4>Shonen</h4>
+                                    <p>Action-packed stories for young males</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="demographic" value="shojo">
+                                <div class="card-content">
+                                    <i class="fas fa-heart"></i>
+                                    <h4>Shojo</h4>
+                                    <p>Romantic stories for young females</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="demographic" value="seinen">
+                                <div class="card-content">
+                                    <i class="fas fa-brain"></i>
+                                    <h4>Seinen</h4>
+                                    <p>Mature themes for adult males</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="demographic" value="josei">
+                                <div class="card-content">
+                                    <i class="fas fa-wine-glass"></i>
+                                    <h4>Josei</h4>
+                                    <p>Realistic stories for adult females</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="demographic" value="any" checked>
+                                <div class="card-content">
+                                    <i class="fas fa-globe"></i>
+                                    <h4>Any</h4>
+                                    <p>No preference</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-number">4</div>
+                    <div class="question-content">
+                        <h3>What content rating do you prefer?</h3>
+                        <div class="option-cards">
+                            <label class="option-card">
+                                <input type="radio" name="content-rating" value="safe" checked>
+                                <div class="card-content">
+                                    <i class="fas fa-child"></i>
+                                    <h4>Safe</h4>
+                                    <p>All ages appropriate</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="content-rating" value="suggestive">
+                                <div class="card-content">
+                                    <i class="fas fa-flirt"></i>
+                                    <h4>Suggestive</h4>
+                                    <p>Mild mature content</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="content-rating" value="erotica">
+                                <div class="card-content">
+                                    <i class="fas fa-fire"></i>
+                                    <h4>Erotica</h4>
+                                    <p>Explicit sexual content</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="content-rating" value="any">
+                                <div class="card-content">
+                                    <i class="fas fa-asterisk"></i>
+                                    <h4>Any</h4>
+                                    <p>No restrictions</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-number">5</div>
+                    <div class="question-content">
+                        <h3>Do you prefer ongoing or completed series?</h3>
+                        <div class="option-cards">
+                            <label class="option-card">
+                                <input type="radio" name="status" value="ongoing">
+                                <div class="card-content">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <h4>Ongoing</h4>
+                                    <p>Currently publishing</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="status" value="completed" checked>
+                                <div class="card-content">
+                                    <i class="fas fa-check-circle"></i>
+                                    <h4>Completed</h4>
+                                    <p>Fully finished stories</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="status" value="any">
+                                <div class="card-content">
+                                    <i class="fas fa-random"></i>
+                                    <h4>Any</h4>
+                                    <p>No preference</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-number">6</div>
+                    <div class="question-content">
+                        <h3>What time period do you prefer?</h3>
+                        <div class="option-cards">
+                            <label class="option-card">
+                                <input type="radio" name="time-period" value="1990s">
+                                <div class="card-content">
+                                    <i class="fas fa-music"></i>
+                                    <h4>90s Classics</h4>
+                                    <p>Dragon Ball, Sailor Moon</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="time-period" value="2000s">
+                                <div class="card-content">
+                                    <i class="fas fa-gamepad"></i>
+                                    <h4>2000s Hits</h4>
+                                    <p>Naruto, Bleach</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="time-period" value="2010s">
+                                <div class="card-content">
+                                    <i class="fas fa-mobile-alt"></i>
+                                    <h4>2010s Modern</h4>
+                                    <p>Attack on Titan, My Hero Academia</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="time-period" value="recent" checked>
+                                <div class="card-content">
+                                    <i class="fas fa-rocket"></i>
+                                    <h4>Recent (2020+)</h4>
+                                    <p>Chainsaw Man, Jujutsu Kaisen</p>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="time-period" value="any">
+                                <div class="card-content">
+                                    <i class="fas fa-history"></i>
+                                    <h4>Any Era</h4>
+                                    <p>No preference</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-number">7</div>
+                    <div class="question-content">
+                        <h3>Minimum rating?</h3>
+                        <div class="rating-slider-container">
+                            <div class="rating-display">★ <span id="rating-value">7.0</span>/10</div>
+                            <input type="range" id="min-rating" min="1" max="10" step="0.5" value="7">
+                            <div class="slider-labels">
+                                <span>1.0</span>
+                                <span>5.0</span>
+                                <span>10.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" id="submit-preferences">
+                    <i class="fas fa-wand-magic-sparkles"></i> Find My Manga
+                </button>
+            </form>
         </div>
         
-        <div id="loading">
-            <div class="spinner"></div>
-            <p>Initializing AI system. This may take a moment...</p>
+        <!-- Top Manga Section -->
+        <div id="top-manga-section">
+            <div class="section-title">
+                <i class="fas fa-crown"></i>
+                <h2>Top Rated Manga</h2>
+            </div>
+            
+            <div id="loading">
+                <div class="spinner"></div>
+                <p>Loading top manga...</p>
+            </div>
+            
+            <div class="manga-grid" id="manga-container"></div>
         </div>
         
-        <div class="manga-grid" id="manga-container"></div>
-        
-        <div class="refresh-container">
-            <button id="refresh-btn">
-                <i class="fas fa-sync-alt"></i>
-                Get Better Recommendations
-            </button>
+        <!-- Recommendations Section (initially hidden) -->
+        <div id="recommendations-section" style="display: none;">
+            <div class="section-title">
+                <i class="fas fa-fire"></i>
+                <h2>Personalized Recommendations</h2>
+            </div>
+            
+            <div class="manga-grid" id="personalized-container"></div>
+            
+            <div class="refresh-container">
+                <button id="refresh-btn" class="btn-primary">
+                    <i class="fas fa-sync-alt"></i> Refine Recommendations
+                </button>
+            </div>
         </div>
     </div>
 

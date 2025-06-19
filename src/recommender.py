@@ -114,45 +114,45 @@ class MangaRecommender:
             self.feature_matrix[manga_index],self.feature_matrix
         )
         return similarities[0].argsort()[-n-1:-1][::-1].tolist()
+        
+def find_similar(self, user_preferences, n=10):
+    """
+    Content-based filtering for initial recommendations.
+    Now explicitly uses keywords, genres, and preferred_publication_types.
+    """
+    pref_text = " ".join(user_preferences.get('keywords', []))
+    pref_vector = self.tfidf.transform([pref_text])
 
-    def find_similar(self, user_preferences, n=10):
-        """
-        Content-based filtering for initial recommendations.
-        Now explicitly uses keywords, genres, and preferred_publication_types.
-        """
-        pref_text = " ".join(user_preferences.get('keywords', []))
-        pref_vector = self.tfidf.transform([pref_text])
+    valid_genres = [g for g in user_preferences.get('genres', [])
+                    if g in self.mlb_genres.classes_]
+    pref_genres_matrix = self.mlb_genres.transform([valid_genres]) if valid_genres \
+        else np.zeros((1, len(self.mlb_genres.classes_)))
 
-        valid_genres = [g for g in user_preferences.get('genres', [])
-                        if g in self.mlb_genres.classes_]
-        pref_genres_matrix = self.mlb_genres.transform([valid_genres]) if valid_genres \
-            else np.zeros((1, len(self.mlb_genres.classes_)))
+    valid_publication_types = [pt for pt in user_preferences.get('preferred_publication_types', [])
+                               if pt in self.mlb_publication_types.classes_]
+    pref_publication_types_matrix = self.mlb_publication_types.transform([valid_publication_types]) \
+        if valid_publication_types \
+        else np.zeros((1, len(self.mlb_publication_types.classes_)))
 
-        valid_publication_types = [pt for pt in user_preferences.get('preferred_publication_types', [])
-                                   if pt in self.mlb_publication_types.classes_]
-        pref_publication_types_matrix = self.mlb_publication_types.transform([valid_publication_types]) \
-            if valid_publication_types \
-            else np.zeros((1, len(self.mlb_publication_types.classes_)))
+    valid_content_ratings = [cr for cr in user_preferences.get('preferred_content_rating', [])
+                             if cr in self.mlb_content_ratings.classes_]
+    pref_content_ratings_matrix = self.mlb_content_ratings.transform([valid_content_ratings]) \
+        if valid_content_ratings \
+        else np.zeros((1, len(self.mlb_content_ratings.classes_)))
 
-        valid_content_ratings = [cr for cr in user_preferences.get('preferred_content_rating', [])
-                                 if cr in self.mlb_content_ratings.classes_]
-        pref_content_ratings_matrix = self.mlb_content_ratings.transform([valid_content_ratings]) \
-            if valid_content_ratings \
-            else np.zeros((1, len(self.mlb_content_ratings.classes_)))
+    valid_statuses = [s for s in user_preferences.get('preferred_status', [])
+                      if s in self.mlb_statuses.classes_]
+    pref_statuses_matrix = self.mlb_statuses.transform([valid_statuses]) \
+        if valid_statuses \
+        else np.zeros((1, len(self.mlb_statuses.classes_)))
 
-        valid_statuses = [s for s in user_preferences.get('preferred_status', [])
-                          if s in self.mlb_statuses.classes_]
-        pref_statuses_matrix = self.mlb_statuses.transform([valid_statuses]) \
-            if valid_statuses \
-            else np.zeros((1, len(self.mlb_statuses.classes_)))
+    user_vector = hstack([
+        pref_vector,
+        pref_genres_matrix,
+        pref_publication_types_matrix,
+        pref_content_ratings_matrix,
+        pref_statuses_matrix
+    ])
 
-        user_vector = hstack([
-            pref_vector,
-            pref_genres_matrix,
-            pref_publication_types_matrix,
-            pref_content_ratings_matrix,
-            pref_statuses_matrix
-        ])
-
-        scores = cosine_similarity(user_vector, self.feature_matrix)
-        return scores[0].argsort()[-n:][::-1].tolist()
+    scores = cosine_similarity(user_vector, self.feature_matrix)
+    return scores[0].argsort()[-n:][::-1].tolist()

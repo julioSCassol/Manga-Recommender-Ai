@@ -1,84 +1,89 @@
-from .api_client import MangaAPIClient
-from .ai_interface import AISession
-import json
+# from .api_client import MangaAPIClient
+# from .ai_interface import AISession
+# import json
 
 
-# sepa quando for transformar em api, mandar soh o id do manga
-# ai o front pega info do manga com o id
-def main():
-    api = MangaAPIClient()
-    ai_session = AISession(api)
+# def main():
+#     api = MangaAPIClient()
+#     ai_session = AISession(api)
 
-    try:
-        print("Iniciando sistema...")
-        ai_session.start_session()
+#     try:
+#         print("Starting Manga Recommendation System...")
+#         ai_session.start_session()
+#         print("System initialized successfully!\n")
 
-        print("\n=== Recomendação Inicial (baseada em preferências configuradas) ===")
-        initial_user_prefs = {
-            'keywords': ['action', 'fantasy', 'magic'],
-            'genres': ['Action', 'Fantasy', 'Adventure'],
-            'authors': [],
-            'artists': [],
-            'avg_year': 2018,
-            'avg_rating': 7.5,
-            'preferred_content_rating': ['safe', 'suggestive'],
-            'preferred_demographics': ['shoujo'],
-            'preferred_status': ['ongoing']
-        }
-        initial_indices = ai_session.recommender.find_similar(
-            initial_user_prefs, n=10)
+#         # Collect user preferences interactively
+#         print("=== Please tell us about your manga preferences ===")
+#         keywords = input("Enter keywords you like (comma separated): ").split(',')
+#         genres = input("Enter your favorite genres (comma separated): ").split(',')
+#         themes = input("Enter themes you enjoy (comma separated): ").split(',')
+#         demographics = input("Preferred demographics (shoujo, shonen, seinen, josei): ").split(',')
+#         status = input("Preferred status (ongoing, completed, hiatus): ").split(',')
+#         content_rating = input("Content rating preference (safe, suggestive, erotica, pornographic): ").split(',')
 
-        print(f"Initial indices: {initial_indices}")
+#         print("\n=== Initial Recommendations Based on Your Preferences ===")
+#         initial_user_prefs = {
+#             'keywords': [k.strip() for k in keywords if k.strip()],
+#             'genres': [g.strip() for g in genres if g.strip()],
+#             'themes': [t.strip() for t in themes if t.strip()],
+#             'preferred_demographics': [d.strip() for d in demographics if d.strip()],
+#             'preferred_status': [s.strip() for s in status if s.strip()],
+#             'preferred_content_rating': [c.strip() for c in content_rating if c.strip()]
+#         }
 
-        if not initial_indices:
-            print(
-                "No initial recommendations found based on default preferences. Consider adjusting them.")
-            return
+#         initial_indices = ai_session.recommender.find_similar(
+#             initial_user_prefs, n=10)
 
-        initial_results = [{
-            'title': ai_session.recommender.data[i]['title'],
-            'author': ai_session.recommender.data[i].get('authors', ['Desconhecido'])[0],
-            'year': ai_session.recommender.data[i].get('year', 'N/A'),
-            'rating': ai_session.recommender.data[i].get('rating', 0),
-            'status': ai_session.recommender.data[i].get('status', 'N/A')
-        } for i in initial_indices]
+#         if not initial_indices:
+#             print("No initial recommendations found. Please try different preferences.")
+#             return
 
-        print(json.dumps(initial_results, indent=2, ensure_ascii=False))
+#         # Display initial recommendations
+#         for i, idx in enumerate(initial_indices):
+#             manga = ai_session.recommender.data[idx]
+#             print(f"{i+1}. {manga['title']} ({manga.get('year', 'N/A')})")
+#             print(f"   Genres: {', '.join(manga.get('genres', []))}")
+#             print(f"   Rating: {manga.get('rating', 0):.1f}\n")
 
-        liked_indices_for_feedback = [
-            initial_indices[0], initial_indices[1], initial_indices[2]]
-        print("\nUsuário curtiu:")
-        for idx in liked_indices_for_feedback:
-            manga_title = ai_session.recommender.data[idx]['title']
-            manga_author = ai_session.recommender.data[idx].get(
-                'authors', ['Desconhecido'])[0]
-            print(f"- {manga_title} ({manga_author})")
+#         # Collect user feedback
+#         liked_indices = []
+#         while True:
+#             choices = input("\nWhich manga did you like? (Enter numbers separated by commas, or 'done'): ")
+#             if choices.lower() == 'done':
+#                 break
+#             try:
+#                 selected = [int(c.strip()) - 1 for c in choices.split(',')]
+#                 valid_selections = [s for s in selected if 0 <= s < len(initial_indices)]
+#                 liked_indices.extend(initial_indices[i] for i in valid_selections)
+#                 print(f"Added {len(valid_selections)} selections to your preferences")
+#             except ValueError:
+#                 print("Please enter valid numbers separated by commas")
 
-        ai_session.update_preferences(liked_indices_for_feedback)
+#         if liked_indices:
+#             ai_session.update_preferences(liked_indices)
+#             print("\nUpdating recommendations based on your preferences...")
+#         else:
+#             print("\nNo selections made. Using initial preferences for recommendations.")
 
-        print("\n=== Recomendação Personalizada ===")
-        personalized_indices = ai_session.get_recommendations()
-        if not personalized_indices:
-            print(
-                "No personalized recommendations found. Consider adjusting user preferences or dataset.")
-            return
+#         # Show personalized recommendations
+#         print("\n=== Personalized Recommendations ===")
+#         personalized_indices = ai_session.get_recommendations()
+#         for i, idx in enumerate(personalized_indices[:10]):
+#             manga = ai_session.recommender.data[idx]
+#             reason = ai_session.get_similarity_reason(idx)
+#             print(f"{i+1}. {manga['title']}")
+#             print(f"   Why: {reason}\n")
 
-        personalized_results = [{
-            'title': ai_session.recommender.data[i]['title'],
-            'author': ai_session.recommender.data[i].get('authors', ['Desconhecido'])[0],
-            'similarity_reason': ai_session.get_similarity_reason(i)
-        } for i in personalized_indices[:10]]
-
-    except KeyboardInterrupt:
-        print("\nOperação cancelada pelo usuário.")
-    except Exception as e:
-        print(f"\nErro: {str(e)}")
-    finally:
-        print("\nFim da sessão.")
+#     except KeyboardInterrupt:
+#         print("\nOperation cancelled by user.")
+#     except Exception as e:
+#         print(f"\nError: {str(e)}")
+#     finally:
+#         print("\nSession ended. Happy reading!")
 
 
-if __name__ == '__main__':
-    import os
-    import sys
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    main()
+# if __name__ == '__main__':
+#     import os
+#     import sys
+#     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+#     main()

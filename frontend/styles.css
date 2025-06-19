@@ -541,3 +541,352 @@ footer {
         flex-direction: column;
     }
 }
+
+/* Add to your existing styles.css */
+#questionnaire-section {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus {
+    border-color: #6c5ce7;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #777;
+    font-size: 0.85rem;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    cursor: pointer;
+    margin: 5px 0;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+#submit-preferences {
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: white;
+    border: none;
+    padding: 14px 25px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#submit-preferences:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
+}
+
+#submit-preferences i {
+    margin-right: 10px;
+}
+
+/* Add these to your existing styles */
+
+/* Header actions */
+.header-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-secondary {
+    background: white;
+    color: #6c5ce7;
+    border: 2px solid #6c5ce7;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+    background: #f0eeff;
+    transform: translateY(-2px);
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    color: #777;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.btn-icon:hover {
+    color: #6c5ce7;
+}
+
+/* Loading states */
+.loading-full, .error-full {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    text-align: center;
+}
+
+.loading-full .spinner {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 20px;
+}
+
+.error-full .error {
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+/* Section titles */
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.section-title h2 {
+    flex-grow: 1;
+    margin: 0;
+}
+
+/* Top manga section */
+#top-manga-section {
+    margin-top: 30px;
+}
+
+/* Add to styles.css */
+.question-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    gap: 20px;
+}
+
+.question-number {
+    background: var(--primary);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 5px;
+}
+
+.question-content {
+    flex: 1;
+}
+
+.question-content h3 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.3rem;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.checkbox-grid label {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.checkbox-grid label:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.checkbox-grid input {
+    margin-right: 10px;
+}
+
+.option-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.option-card {
+    display: block;
+    cursor: pointer;
+}
+
+.option-card input {
+    display: none;
+}
+
+.option-card input:checked + .card-content {
+    border-color: var(--primary);
+    background: rgba(138, 43, 226, 0.05);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(138, 43, 226, 0.15);
+}
+
+.card-content {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.card-content:hover {
+    border-color: #ced4da;
+}
+
+.card-content i {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 15px;
+}
+
+.card-content h4 {
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.card-content p {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.rating-slider-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.rating-display {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+#min-rating {
+    width: 100%;
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #ff6b6b, #ffd166, #8a2be2);
+    outline: none;
+    -webkit-appearance: none;
+}
+
+#min-rating::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 8px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .option-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .checkbox-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .checkbox-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .question-card {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .question-number {
+        align-self: flex-start;
+    }
+}

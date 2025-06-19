@@ -32,7 +32,7 @@ class AISession:
         if not initial_data:
             raise ValueError("No initial manga data found from API search.")
 
-        logging.info(f"Received {len(initial_data)} manga entries from API search.")
+      #  logging.info(f"Received {len(initial_data)} manga entries from API search.")
 
         if initial_data:
             self.recommender = MangaRecommender(initial_data)
@@ -137,10 +137,6 @@ class AISession:
         logging.info("User preferences updated based on liked manga.")
 
     def get_recommendations(self):
-        """
-        Generates recommendations based on the user's current preferences.
-        It applies a rule-based scoring system to find matching manga.
-        """
         if not self.recommender or not hasattr(self.recommender, 'data') or not self.recommender.data:
             logging.warning(
                 "Recommender not initialized or data is empty. Cannot generate recommendations.")
@@ -154,6 +150,9 @@ class AISession:
 
         if preferences:
             logging.info("Generating recommendations using user preferences.")
+            logging.info(f"Top preference weights:")
+            logging.info(f"• Genres: {list(pref_genres)[:5]}")
+            logging.info(f"• Themes: {list(pref_themes)[:5]}")
             for idx, manga in enumerate(data):
                 score = 0
 
@@ -200,19 +199,25 @@ class AISession:
                         manga['rating'] - preferences['avg_rating'])
                     score += max(0, 5 - rating_diff)
 
-                if 'preferred_content_rating' in preferences and manga.get('contentRating') and isinstance(preferences['preferred_content_rating'], list):
-                    if manga['contentRating'] in preferences['preferred_content_rating']:
-                        score += 2
-
-                if 'preferred_demographics' in preferences and manga.get('demographic') and isinstance(preferences['preferred_demographics'], list):
-                    if manga['demographic'] in preferences['preferred_demographics']:
+                # Add points for publication type match
+                if 'preferred_publication_types' in preferences and manga.get('publication_type'):
+                    if manga['publication_type'] in preferences['preferred_publication_types']:
                         score += 1.5
+
+                if 'preferred_content_rating' in preferences and manga.get('content_rating') and isinstance(preferences['preferred_content_rating'], list):
+                    if manga['content_rating'] in preferences['preferred_content_rating']:
+                        score += 2
 
                 if 'preferred_status' in preferences and manga.get('status') and isinstance(preferences['preferred_status'], list):
                     if manga['status'] in preferences['preferred_status']:
                         score += 1
 
                 recommendations.append((idx, score))
+
+        top_recs = [self.recommender.data[idx]['title'] for idx, _ in recommendations[:5]]
+        logging.info(f"Top 5 recommendations:")
+        for i, title in enumerate(top_recs, 1):
+            logging.info(f"{i}. {title}")
 
             recommendations.sort(key=lambda x: x[1], reverse=True)
             return [idx for idx, score in recommendations[:50]]

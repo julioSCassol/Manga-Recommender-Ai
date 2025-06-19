@@ -18,6 +18,31 @@ class MangaAPIClient:
         self.session.headers.update({
             'User-Agent': 'MangaAI/1.0 (+https://github.com/your-repo)'
         })
+        self.last_cache_clean = datetime.now()  # Add this line
+
+    def _generate_cache_key(self, params: Dict) -> tuple:
+            """Generate a unique key for API request parameters"""
+            return tuple(sorted(params.items()))
+        
+    def _is_cache_valid(self, cache_key: tuple) -> bool:
+            """Check if cached data is still valid"""
+            if cache_key not in self.cache:
+                return False
+            return datetime.now() - self.cache[cache_key]['timestamp'] < self.max_cache_age
+        
+    def _clean_old_cache(self):
+            """Periodically clean up old cache entries"""
+            if datetime.now() - self.last_cache_clean < timedelta(minutes=5):
+                return
+                
+            self.last_cache_clean = datetime.now()
+            keys_to_delete = []
+            for key, entry in self.cache.items():
+                if datetime.now() - entry['timestamp'] > self.max_cache_age:
+                    keys_to_delete.append(key)
+                    
+            for key in keys_to_delete:
+                del self.cache[key]
 
     def search_manga(self, filters: Dict, limit: int = 100) -> List[Dict]:
         """
@@ -25,6 +50,8 @@ class MangaAPIClient:
         """
         params = self._build_params(filters, limit)
         cache_key = self._generate_cache_key(params)
+
+        self._clean_old_cache()
 
         if self._is_cache_valid(cache_key):
             logging.info("Returning cached results")
@@ -58,7 +85,10 @@ class MangaAPIClient:
 
         except Exception as e:
             logging.error(f"Search failed: {str(e)}")
+            # Return empty list on failure
+            return []
 
+        # Cache results before returning
         self.cache[cache_key] = {
             'timestamp': datetime.now(),
             'data': all_results[:limit]
@@ -141,7 +171,7 @@ class MangaAPIClient:
                     'cover_art': self._safe_find_cover_art(relationships, manga.get('id', '')),
                     'stats': self._get_statistics(manga.get('id', ''))
                 })
-                print(attributes)
+                #print(attributes) floodou o terminal com os atributos
 
             except KeyError as e:
                 logging.warning(f"Skipping manga due to missing key: {str(e)}")
