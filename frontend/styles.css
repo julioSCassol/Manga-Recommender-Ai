@@ -731,14 +731,14 @@ footer {
     display: flex;
     align-items: center;
     padding: 10px;
-    background: #f8f9fa;
+    background: #555555; /* Checkbox */
     border-radius: 8px;
     transition: all 0.2s;
     cursor: pointer;
 }
 
 .checkbox-grid label:hover {
-    background: #e9ecef;
+    background: #a3a4a5;
     transform: translateY(-2px);
 }
 
