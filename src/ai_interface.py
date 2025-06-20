@@ -28,7 +28,7 @@ class AISession:
             # Fetch initial manga data
             initial_data = self.api.search_manga({
                 'content_rating': ['safe', 'suggestive'],
-                'limit': 500
+                'limit': 1000
             })
             
             if not initial_data:

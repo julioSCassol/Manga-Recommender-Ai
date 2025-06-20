@@ -307,31 +307,6 @@ nav a:hover, nav a.active {
     margin: 50px 0;
 }
 
-#refresh-btn {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-    border: none;
-    padding: 15px 40px;
-    border-radius: 50px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 15px rgba(138, 43, 226, 0.4);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-}
-
-#refresh-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(138, 43, 226, 0.6);
-}
-
-#refresh-btn:active {
-    transform: translateY(1px);
-}
-
 /* Footer */
 footer {
     text-align: center;
@@ -889,4 +864,35 @@ footer {
     .question-number {
         align-self: flex-start;
     }
+}
+
+.loading-full {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.error-full {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffebee;
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 10;
+    max-width: 90%;
+}
+
+#preference-form {
+    position: relative;
+    transition: opacity 0.3s ease;
 }
