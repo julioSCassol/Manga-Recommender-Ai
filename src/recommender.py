@@ -11,26 +11,23 @@ logging.basicConfig(level=logging.INFO,
 
 class MangaRecommender:
     def __init__(self, data):
-        """
-        Initialize the recommender with manga data
-        :param data: List of manga dictionaries
-        """
         self.data = data
         self._prepare_features()
-        logging.info(f"Recommender initialized with {len(data)} manga entries")
 
     def _prepare_features(self):
-        """
-        Create AI-ready feature matrix from manga data,
-        using 'publication_type' as the demographic feature.
-        """
         all_genres = set()
         all_publication_types = set()
         all_content_ratings = set()
         all_statuses = set()
 
-        # Collect all unique values for each feature
+        # First pass: collect all unique values and ratings
+        ratings = []
         for manga in self.data:
+            # Collect rating
+            rating = manga.get('rating', 0)
+            ratings.append(rating)
+
+            # Collect other features
             if 'genres' in manga and isinstance(manga['genres'], list):
                 all_genres.update(manga['genres'])
 
@@ -38,7 +35,8 @@ class MangaRecommender:
             if publication_type and isinstance(publication_type, str):
                 all_publication_types.add(publication_type)
 
-            content_rating = manga.get('content_rating') or manga.get('contentRating')
+            content_rating = manga.get(
+                'content_rating') or manga.get('contentRating')
             if content_rating and isinstance(content_rating, str):
                 all_content_ratings.add(content_rating)
 
@@ -46,21 +44,26 @@ class MangaRecommender:
             if status and isinstance(status, str):
                 all_statuses.add(status)
 
-        # Initialize vectorizers and binarizers
-        self.tfidf = TfidfVectorizer(
-            stop_words='english',
-            max_features=5000
-        )
-        
-        # Handle empty classes by adding a fallback value
+        # Normalize ratings
+        self.min_rating = min(ratings) if ratings else 0
+        self.max_rating = max(ratings) if ratings else 10
+        self.normalized_ratings = np.array(
+            [(r - self.min_rating) / (self.max_rating - self.min_rating + 1e-8)
+             for r in ratings]
+        ).reshape(-1, 1)
+
+        # Rest of your feature preparation code...
+        self.tfidf = TfidfVectorizer(stop_words='english', max_features=5000)
         self.mlb_genres = MultiLabelBinarizer(
             classes=list(all_genres) if all_genres else ['unknown_genre']
         )
         self.mlb_publication_types = MultiLabelBinarizer(
-            classes=list(all_publication_types) if all_publication_types else ['unknown_publication_type']
+            classes=list(all_publication_types) if all_publication_types else [
+                'unknown_publication_type']
         )
         self.mlb_content_ratings = MultiLabelBinarizer(
-            classes=list(all_content_ratings) if all_content_ratings else ['unknown_content_rating']
+            classes=list(all_content_ratings) if all_content_ratings else [
+                'unknown_content_rating']
         )
         self.mlb_statuses = MultiLabelBinarizer(
             classes=list(all_statuses) if all_statuses else ['unknown_status']
@@ -86,7 +89,8 @@ class MangaRecommender:
             publication_type_data.append(
                 [pub_type_val] if pub_type_val and isinstance(pub_type_val, str) else [])
 
-            content_rating_val = manga.get('content_rating') or manga.get('contentRating')
+            content_rating_val = manga.get(
+                'content_rating') or manga.get('contentRating')
             content_rating_data.append([content_rating_val] if content_rating_val and isinstance(
                 content_rating_val, str) else [])
 
@@ -97,7 +101,7 @@ class MangaRecommender:
         # Transform features
         self.tfidf_matrix = self.tfidf.fit_transform(text_data)
         self.genre_matrix = self.mlb_genres.fit_transform(genre_data)
-        self.publication_type_matrix = self.mlb_publication_types.fit_transform(  
+        self.publication_type_matrix = self.mlb_publication_types.fit_transform(
             publication_type_data
         )
         self.content_rating_matrix = self.mlb_content_ratings.fit_transform(
@@ -105,27 +109,19 @@ class MangaRecommender:
         self.status_matrix = self.mlb_statuses.fit_transform(status_data)
 
         # Combine all features into single sparse matrix
+        rating_weight = 6.0  # Adjust this value as needed
         self.feature_matrix = hstack(
             [self.tfidf_matrix,
              self.genre_matrix,
              self.publication_type_matrix,
              self.content_rating_matrix,
-             self.status_matrix
+             self.status_matrix,
+             self.normalized_ratings * rating_weight
              ]).tocsr()
 
-        logging.info(f"Feature matrix created with shape: {self.feature_matrix.shape}")
+        logging.info(f"Feature matrix created with shape: {
+                     self.feature_matrix.shape}")
 
-    def recommend(self, manga_index, n=5):
-        """Get similar manga recommendations (now includes publication_type indirectly)."""
-        if not self.feature_matrix.shape[0] > manga_index:
-            logging.error(f"Manga index {manga_index} is out of bounds for feature matrix size {self.feature_matrix.shape[0]}")
-            return []
-
-        similarities = cosine_similarity(
-            self.feature_matrix[manga_index],self.feature_matrix
-        )
-        return similarities[0].argsort()[-n-1:-1][::-1].tolist()
-        
     def find_similar(self, user_preferences, n=10):
         """
         Content-based filtering for initial recommendations.
@@ -163,22 +159,29 @@ class MangaRecommender:
                 if valid_statuses \
                 else np.zeros((1, len(self.mlb_statuses.classes_)))
 
+            target_rating = user_preferences.get('avg_rating', 7.0)
+            # Normalize the target rating
+            normalized_target_rating = (target_rating - self.min_rating) / \
+                (self.max_rating - self.min_rating + 1e-8)
+            rating_vector = np.array([[normalized_target_rating]])
+
             # Combine all preference vectors
             user_vector = hstack([
                 pref_vector,
                 pref_genres_matrix,
                 pref_publication_types_matrix,
                 pref_content_ratings_matrix,
-                pref_statuses_matrix
+                pref_statuses_matrix,
+                rating_vector
             ])
 
             # Calculate similarity scores
             scores = cosine_similarity(user_vector, self.feature_matrix)
             top_indices = scores[0].argsort()[-n:][::-1].tolist()
-            logging.info(f"Found {len(top_indices)} similar manga based on preferences")
+            logging.info(f"Found {len(top_indices)
+                                  } similar manga based on preferences")
             return top_indices
         except Exception as e:
             logging.error(f"find_similar failed: {str(e)}")
             # Return random indices as fallback
             return list(np.random.choice(len(self.data), size=min(n, len(self.data)), replace=False))
-

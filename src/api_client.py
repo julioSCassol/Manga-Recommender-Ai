@@ -208,13 +208,13 @@ class MangaAPIClient:
 
         try:
             while total_processed < limit:
-                current_params = params.copy()
-                current_params['offset'] = len(all_results)
-
+                # current_params = params.copy()
+                # current_params['offset'] = len(all_results)
+                #
                 response = self._safe_request(
                     method='GET',
                     url=f"{self.base_url}/manga",
-                    params=current_params,
+                    params=params,
                     retries=self.max_retries
                 )
 
@@ -246,9 +246,9 @@ class MangaAPIClient:
         """Construct and validate API parameters"""
         params = {
             'limit': min(limit, 100),
-            'includes[]': ['author', 'artist', 'cover_art', 'tag'],
-            'contentRating[]': filters.get('content_rating', ['safe', 'suggestive']),
-            'order[rating]': 'desc'
+            # 'includes[]': ['author', 'artist', 'cover_art', 'tag'],
+            # 'contentRating[]': filters.get('content_rating', ['safe', 'suggestive']),
+            # 'order[rating]': 'desc'
         }
 
         param_mapping = {
@@ -268,18 +268,31 @@ class MangaAPIClient:
 
         return params
 
+    def get_manga_rating(self, manga_id: str) -> float:
+        """Get manga rating with error handling"""
+        try:
+            response = self._safe_request(
+                'GET', f"{self.base_url}/statistics/manga/{manga_id}")
+            if response:
+                data = response.json()
+                stats = data["statistics"][manga_id]
+                rating = stats["rating"]["bayesian"]
+
+                if rating is None:
+                    return 0.0
+                return rating
+        except Exception as e:
+            print(f"Failed to get rating for {manga_id}: {str(e)}")
+        return 0
+
     def _process_results(self, data: Dict) -> List[Dict]:
         """Process API response with error handling"""
         processed = []
         for manga in data.get('data', []):
-            print("\n\nprocessing new", manga)
             try:
                 attributes = manga.get('attributes', {})
                 relationships = manga.get('relationships', [])
-                # print(manga) # Keep this for debugging if needed
 
-                # --- FIX STARTS HERE ---
-                # Get tags directly from attributes
                 all_tags = attributes.get('tags', [])
                 genres = []
                 themes = []
@@ -289,7 +302,6 @@ class MangaAPIClient:
                     tag_name_multilingual = tag_attributes.get('name', {})
                     tag_group = tag_attributes.get('group')
 
-                    # Get English name, or fall back to any available language
                     tag_name = tag_name_multilingual.get('en') or next(
                         iter(tag_name_multilingual.values()), 'Unknown Tag')
 
@@ -297,7 +309,8 @@ class MangaAPIClient:
                         genres.append(tag_name)
                     elif tag_group == 'theme':
                         themes.append(tag_name)
-                # --- FIX ENDS HERE ---
+
+                print(self.get_manga_rating(manga.get('id', '')))
 
                 processed.append({
                     'id': manga.get('id', ''),
@@ -307,9 +320,9 @@ class MangaAPIClient:
                     'authors': self._safe_get_creators(relationships, 'author'),
                     'artists': self._safe_get_creators(relationships, 'artist'),
                     'last_updated': parser.parse(attributes.get('updatedAt')) if attributes.get('updatedAt') else None,
-                    'genres': genres,  # Use the correctly parsed genres
-                    'themes': themes,  # Use the correctly parsed themes
-                    'rating': attributes.get('rating', {}).get('bayesian', 0),
+                    'genres': genres,
+                    'themes': themes,
+                    'rating': self.get_manga_rating(manga.get('id', '')),
                     'language': attributes.get('originalLanguage'),
                     'content_rating': attributes.get('contentRating'),
                     'publication_type': attributes.get('publicationDemographic'),
@@ -319,7 +332,7 @@ class MangaAPIClient:
                 })
 
             except KeyError as e:
-                logging.warning(f"Skipping manga due to missing key: {str(e)}")
+                print(f"Skipping manga due to missing key: {str(e)}")
                 continue
 
         return processed
@@ -374,63 +387,6 @@ class MangaAPIClient:
         except Exception as e:
             print(f"Failed to get {role}s: {str(e)}")
             return []
-
-    def _process_full_details(self, data: Dict) -> Optional[Dict]:
-        """Process the full manga details response with error handling"""
-        if not data or 'data' not in data:
-            print("No data found in full details response.")
-            return None
-
-        manga = data['data']
-        try:
-            attributes = manga.get('attributes', {})
-            relationships = manga.get('relationships', [])
-
-            all_tags = attributes.get('tags', [])
-            genres = []
-            themes = []
-
-            for tag in all_tags:
-                tag_attributes = tag.get('attributes', {})
-                tag_name_multilingual = tag_attributes.get('name', {})
-                tag_group = tag_attributes.get('group')
-
-                tag_name = tag_name_multilingual.get('en') or next(
-                    iter(tag_name_multilingual.values()), 'Unknown Tag')
-
-                if tag_group == 'genre':
-                    genres.append(tag_name)
-                elif tag_group == 'theme':
-                    themes.append(tag_name)
-
-            manga_returned = {
-                'id': manga.get('id', ''),
-                'title': attributes.get('title', {}).get('en', 'No title'),
-                'description': attributes.get('description', {}).get('en', ''),
-                'year': attributes.get('year'),
-                'authors': self._safe_get_creators(relationships, 'author'),
-                'artists': self._safe_get_creators(relationships, 'artist'),
-                'last_updated': parser.parse(attributes.get('updatedAt')) if attributes.get('updatedAt') else None,
-                'genres': genres,
-                'themes': themes,
-                'rating': attributes.get('rating', {}).get('bayesian', 0),
-                'language': attributes.get('originalLanguage'),
-                'content_rating': attributes.get('contentRating'),
-                'publication_type': attributes.get('publicationDemographic'),
-                'status': attributes.get('status'),
-                'cover_art': self._safe_find_cover_art(relationships, manga.get('id', '')),
-                'stats': self._get_statistics(manga.get('id', ''))
-            }
-            print(manga_returned)
-            return manga_returned
-        except KeyError as e:
-            print(f"Error processing manga details due to missing key: {
-                str(e)} in {manga.get('id')}")
-            return None
-        except Exception as e:
-            print(f"Unexpected error processing manga details for {
-                manga.get('id')}: {str(e)}")
-            return None
 
     def _filter_relationships(self, relationships: List[Dict], type_: str) -> List[Dict]:
         return [r for r in relationships if r.get('type') == type_]
