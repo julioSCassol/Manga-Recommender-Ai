@@ -8,32 +8,36 @@ app = Flask(__name__, static_folder='frontend', static_url_path='')
 sessions = {}
 logging.basicConfig(level=logging.INFO)
 
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
 
 # New endpoint to get top manga
+
+
 @app.route('/api/top-manga', methods=['GET'])
 def get_top_manga():
     try:
         api = MangaAPIClient()
-        
+
         # Fetch top manga with high ratings
         top_manga = api.search_manga({
             'content_rating': ['safe', 'suggestive'],
             'order[rating]': 'desc',
             'limit': 100
         })
-        
+
         # Sort by rating descending
         top_manga.sort(key=lambda x: x.get('rating', 0), reverse=True)
-        
+
         return jsonify({
             'top_manga': top_manga[:100]  # Return top 100
         })
     except Exception as e:
         logging.error(f"Failed to fetch top manga: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/session', methods=['POST'])
 def create_session():
@@ -54,7 +58,7 @@ def create_session():
             'any': None
         }
         avg_year = period_map.get(preferences.get('time_period', 'any'), None)
-        
+
         # Create initial preferences
         initial_user_prefs = {
             'keywords': preferences.get('genres', []) + preferences.get('themes', []),
@@ -76,9 +80,11 @@ def create_session():
 
         if not initial_indices:
             app.logger.warning("Using fallback recommendations")
-            initial_indices = list(range(min(10, len(ai_session.recommender.data))))
+            initial_indices = list(
+                range(min(10, len(ai_session.recommender.data))))
 
-        recommendations = [ai_session.recommender.data[i] for i in initial_indices]
+        recommendations = [ai_session.recommender.data[i]
+                           for i in initial_indices]
 
         session_id = str(uuid.uuid4())
         sessions[session_id] = ai_session
@@ -90,6 +96,7 @@ def create_session():
     except Exception as e:
         logging.error(f"Session creation failed: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/recommend', methods=['POST'])
 def get_recommendations():
@@ -115,12 +122,14 @@ def get_recommendations():
         ai_session.update_preferences(indices)
 
         new_indices = ai_session.get_recommendations()
-        recommendations = [ai_session.recommender.data[i] for i in new_indices[:10]]
+        recommendations = [ai_session.recommender.data[i]
+                           for i in new_indices[:10]]
 
         return jsonify({'recommendations': recommendations})
     except Exception as e:
         logging.error(f"Recommendation failed: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

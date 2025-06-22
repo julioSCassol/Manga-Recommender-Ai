@@ -1,7 +1,6 @@
 import requests
 from datetime import datetime, timedelta
 import time
-import logging
 from typing import Dict, List, Optional
 from dateutil import parser
 import json
@@ -106,16 +105,15 @@ class MangaAPIClient:
 
             with open(self.cache_filepath, 'w', encoding='utf-8') as f:
                 json.dump(serializable_cache, f, indent=2)
-            logging.info(f"Cache saved to {self.cache_filepath}")
         except Exception as e:
-            logging.error(f"Failed to save entire cache to {
-                          self.cache_filepath}: {str(e)}")
+            print(f"Failed to save entire cache to {
+                self.cache_filepath}: {str(e)}")
 
     def _load_persistent_cache(self):
         """Load the entire cache from the single cache.json file."""
         if not self.cache_filepath.exists():
-            logging.info(f"No cache file found at {
-                         self.cache_filepath}. Starting with empty cache.")
+            print(f"No cache file found at {
+                self.cache_filepath}. Starting with empty cache.")
             return
 
         try:
@@ -144,20 +142,17 @@ class MangaAPIClient:
                     'timestamp': timestamp,
                     'retrieval_time': retrieval_time
                 }
-            logging.info(f"Cache loaded from {self.cache_filepath} with {
-                         len(self.cache)} entries.")
 
         except Exception as e:
-            logging.warning(f"Failed to load cache file {self.cache_filepath}: {str(e)}. "
-                            "Cache might be corrupt or malformed. Starting with empty cache.")
+            print(f"Failed to load cache file {self.cache_filepath}: {str(e)}. "
+                  "Cache might be corrupt or malformed. Starting with empty cache.")
             self.cache = {}
             try:
                 corrupt_path = self.cache_filepath.with_name(
                     self.cache_filepath.name + '.corrupt')
                 self.cache_filepath.rename(corrupt_path)
-                logging.info(f"Moved corrupt cache file to {corrupt_path}")
             except Exception as unlink_error:
-                logging.warning(
+                print(
                     f"Failed to rename corrupt cache file: {unlink_error}")
 
     def _generate_cache_key(self, params: Dict) -> tuple:
@@ -170,8 +165,8 @@ class MangaAPIClient:
         if cache_key not in self.cache:
             return False
         if 'timestamp' not in self.cache[cache_key]:
-            logging.warning(f"Cache entry for {
-                            cache_key} is missing 'timestamp'. Considering invalid.")
+            print(f"Cache entry for {
+                cache_key} is missing 'timestamp'. Considering invalid.")
             return False
         return datetime.now() - self.cache[cache_key]['timestamp'] < self.max_cache_age
 
@@ -180,7 +175,6 @@ class MangaAPIClient:
         if datetime.now() - self.last_cache_clean < timedelta(minutes=5):
             return
 
-        logging.info("Cleaning old cache entries...")
         self.last_cache_clean = datetime.now()
 
         keys_to_delete = []
@@ -192,11 +186,9 @@ class MangaAPIClient:
             del self.cache[key]
 
         if keys_to_delete:
-            logging.info(f"Removed {len(keys_to_delete)
-                                    } expired cache entries.")
             self._save_persistent_cache()
         else:
-            logging.info("No expired cache entries found to clean.")
+            print("No expired cache entries found to clean.")
 
     def search_manga(self, filters: Dict, limit: int = 100) -> List[Dict]:
         """
@@ -208,7 +200,6 @@ class MangaAPIClient:
         self._clean_old_cache()
 
         if self._is_cache_valid(cache_key):
-            logging.info("Returning cached results for manga search.")
             return self.cache[cache_key]['data']
 
         all_results = []
@@ -239,7 +230,7 @@ class MangaAPIClient:
                     break
 
         except Exception as e:
-            logging.error(f"Manga search failed: {str(e)}")
+            print(f"Manga search failed: {str(e)}")
             return []
 
         self.cache[cache_key] = {
@@ -249,50 +240,7 @@ class MangaAPIClient:
         }
         self._save_persistent_cache()
 
-        logging.info(f"Fetched and cached {
-                     len(all_results[:limit])} manga results.")
         return all_results[:limit]
-
-    def get_manga_details(self, manga_id: str) -> Optional[Dict]:
-        """Get manga details with persistent caching"""
-        cache_key = ("manga_details",
-                     manga_id)
-
-        self._clean_old_cache()
-
-        if self._is_cache_valid(cache_key):
-            logging.info(f"Returning cached details for manga ID: {manga_id}.")
-            return self.cache[cache_key]['data']
-
-        retrieval_time = datetime.now()
-
-        try:
-            response = self._safe_request(
-                method='GET',
-                url=f"{self.base_url}/manga/{manga_id}",
-                params={'includes[]': ['author', 'artist', 'cover_art', 'tag']},
-                retries=self.max_retries
-            )
-
-            if not response:
-                return None
-
-            details = self._process_full_details(response.json())
-
-            if details:
-                self.cache[cache_key] = {
-                    'timestamp': datetime.now(),
-                    'retrieval_time': retrieval_time,
-                    'data': details
-                }
-                self._save_persistent_cache()
-                logging.info(
-                    f"Fetched and cached details for manga ID: {manga_id}.")
-            return details
-
-        except Exception as e:
-            logging.error(f"Failed to get details for {manga_id}: {str(e)}")
-            return None
 
     def _build_params(self, filters: Dict, limit: int) -> Dict:
         """Construct and validate API parameters"""
@@ -324,9 +272,32 @@ class MangaAPIClient:
         """Process API response with error handling"""
         processed = []
         for manga in data.get('data', []):
+            print("\n\nprocessing new", manga)
             try:
                 attributes = manga.get('attributes', {})
                 relationships = manga.get('relationships', [])
+                # print(manga) # Keep this for debugging if needed
+
+                # --- FIX STARTS HERE ---
+                # Get tags directly from attributes
+                all_tags = attributes.get('tags', [])
+                genres = []
+                themes = []
+
+                for tag in all_tags:
+                    tag_attributes = tag.get('attributes', {})
+                    tag_name_multilingual = tag_attributes.get('name', {})
+                    tag_group = tag_attributes.get('group')
+
+                    # Get English name, or fall back to any available language
+                    tag_name = tag_name_multilingual.get('en') or next(
+                        iter(tag_name_multilingual.values()), 'Unknown Tag')
+
+                    if tag_group == 'genre':
+                        genres.append(tag_name)
+                    elif tag_group == 'theme':
+                        themes.append(tag_name)
+                # --- FIX ENDS HERE ---
 
                 processed.append({
                     'id': manga.get('id', ''),
@@ -336,18 +307,8 @@ class MangaAPIClient:
                     'authors': self._safe_get_creators(relationships, 'author'),
                     'artists': self._safe_get_creators(relationships, 'artist'),
                     'last_updated': parser.parse(attributes.get('updatedAt')) if attributes.get('updatedAt') else None,
-                    'genres': [
-                        tag['attributes']['name'].get('en') or next(
-                            iter(tag['attributes']['name'].values()))
-                        for tag in self._filter_relationships(relationships, 'tag')
-                        if tag.get('attributes', {}).get('name') and tag['attributes'].get('group') == 'genre'
-                    ],
-                    'themes': [
-                        tag['attributes']['name'].get('en') or next(
-                            iter(tag['attributes']['name'].values()))
-                        for tag in self._filter_relationships(relationships, 'tag')
-                        if tag.get('attributes', {}).get('name') and tag['attributes'].get('group') == 'theme'
-                    ],
+                    'genres': genres,  # Use the correctly parsed genres
+                    'themes': themes,  # Use the correctly parsed themes
                     'rating': attributes.get('rating', {}).get('bayesian', 0),
                     'language': attributes.get('originalLanguage'),
                     'content_rating': attributes.get('contentRating'),
@@ -378,15 +339,15 @@ class MangaAPIClient:
                 return response
             except requests.exceptions.RequestException as e:
                 if attempt < retries:
-                    logging.warning(
+                    print(
                         f"Attempt {attempt + 1}/{retries} failed: {str(e)}")
                     time.sleep(self.retry_delay * (attempt + 1))
                 else:
-                    logging.error(f"Request failed after {
+                    print(f"Request failed after {
                         retries} attempts: {str(e)}")
                     return None
             except Exception as e:
-                logging.error(f"Unexpected error: {str(e)}")
+                print(f"Unexpected error: {str(e)}")
                 return None
         return None
 
@@ -399,7 +360,7 @@ class MangaAPIClient:
             )
             return response.json().get('statistics', {}).get(manga_id, {}) if response else {}
         except Exception as e:
-            logging.warning(f"Failed to get stats for {manga_id}: {str(e)}")
+            print(f"Failed to get stats for {manga_id}: {str(e)}")
             return {}
 
     def _safe_get_creators(self, relationships: List[Dict], role: str) -> List[str]:
@@ -411,13 +372,13 @@ class MangaAPIClient:
                 if r.get('id')
             ]
         except Exception as e:
-            logging.warning(f"Failed to get {role}s: {str(e)}")
+            print(f"Failed to get {role}s: {str(e)}")
             return []
 
     def _process_full_details(self, data: Dict) -> Optional[Dict]:
         """Process the full manga details response with error handling"""
         if not data or 'data' not in data:
-            logging.warning("No data found in full details response.")
+            print("No data found in full details response.")
             return None
 
         manga = data['data']
@@ -442,7 +403,7 @@ class MangaAPIClient:
                 elif tag_group == 'theme':
                     themes.append(tag_name)
 
-            return {
+            manga_returned = {
                 'id': manga.get('id', ''),
                 'title': attributes.get('title', {}).get('en', 'No title'),
                 'description': attributes.get('description', {}).get('en', ''),
@@ -460,12 +421,14 @@ class MangaAPIClient:
                 'cover_art': self._safe_find_cover_art(relationships, manga.get('id', '')),
                 'stats': self._get_statistics(manga.get('id', ''))
             }
+            print(manga_returned)
+            return manga_returned
         except KeyError as e:
-            logging.error(f"Error processing manga details due to missing key: {
+            print(f"Error processing manga details due to missing key: {
                 str(e)} in {manga.get('id')}")
             return None
         except Exception as e:
-            logging.error(f"Unexpected error processing manga details for {
+            print(f"Unexpected error processing manga details for {
                 manga.get('id')}: {str(e)}")
             return None
 
@@ -480,8 +443,6 @@ class MangaAPIClient:
         self._clean_old_cache()
 
         if self._is_cache_valid(cache_key):
-            logging.info(
-                f"Returning cached creator details for ID: {creator_id}.")
             return self.cache[cache_key]['data']
 
         retrieval_time = datetime.now()
@@ -498,11 +459,9 @@ class MangaAPIClient:
                     'data': name
                 }
                 self._save_persistent_cache()
-                logging.info(
-                    f"Fetched and cached creator details for ID: {creator_id}.")
                 return name
         except Exception as e:
-            logging.warning(f"Failed to get creator {creator_id}: {str(e)}")
+            print(f"Failed to get creator {creator_id}: {str(e)}")
 
         return "Unknown"
 
@@ -526,7 +485,7 @@ class MangaAPIClient:
                         return f"https://mangadex.org/covers/{mangaId}/{image_filename}"
             return None
         except Exception as e:
-            logging.warning(f"Failed to find cover art: {str(e)}")
+            print(f"Failed to find cover art: {str(e)}")
             return None
 
     def __del__(self):
