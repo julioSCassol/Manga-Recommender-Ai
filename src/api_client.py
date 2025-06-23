@@ -106,14 +106,12 @@ class MangaAPIClient:
             with open(self.cache_filepath, 'w', encoding='utf-8') as f:
                 json.dump(serializable_cache, f, indent=2)
         except Exception as e:
-            print(f"Failed to save entire cache to {
-                self.cache_filepath}: {str(e)}")
+            print(f"Failed to save entire cache to {self.cache_filepath}: {str(e)}")
 
     def _load_persistent_cache(self):
         """Load the entire cache from the single cache.json file."""
         if not self.cache_filepath.exists():
-            print(f"No cache file found at {
-                self.cache_filepath}. Starting with empty cache.")
+            print(f"No cache file found at {self.cache_filepath}. Starting with empty cache.")
             return
 
         try:
@@ -165,8 +163,7 @@ class MangaAPIClient:
         if cache_key not in self.cache:
             return False
         if 'timestamp' not in self.cache[cache_key]:
-            print(f"Cache entry for {
-                cache_key} is missing 'timestamp'. Considering invalid.")
+            print(f"Cache entry for {cache_key} is missing 'timestamp'. Considering invalid.")
             return False
         return datetime.now() - self.cache[cache_key]['timestamp'] < self.max_cache_age
 
@@ -356,8 +353,7 @@ class MangaAPIClient:
                         f"Attempt {attempt + 1}/{retries} failed: {str(e)}")
                     time.sleep(self.retry_delay * (attempt + 1))
                 else:
-                    print(f"Request failed after {
-                        retries} attempts: {str(e)}")
+                    print(f"Request failed after {retries} attempts: {str(e)}")
                     return None
             except Exception as e:
                 print(f"Unexpected error: {str(e)}")
@@ -430,8 +426,7 @@ class MangaAPIClient:
             if cover_art_relationship:
                 response = self._safe_request(
                     'GET',
-                    f"https://api.mangadex.org/cover/{
-                        cover_art_relationship['id']}"
+                    f"https://api.mangadex.org/cover/{cover_art_relationship['id']}"
                 )
                 if response:
                     data = response.json()

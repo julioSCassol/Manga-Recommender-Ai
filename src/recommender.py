@@ -119,8 +119,7 @@ class MangaRecommender:
              self.normalized_ratings * rating_weight
              ]).tocsr()
 
-        logging.info(f"Feature matrix created with shape: {
-                     self.feature_matrix.shape}")
+        logging.info(f"Feature matrix created with shape: {self.feature_matrix.shape}")
 
     def find_similar(self, user_preferences, n=10):
         """
@@ -178,8 +177,7 @@ class MangaRecommender:
             # Calculate similarity scores
             scores = cosine_similarity(user_vector, self.feature_matrix)
             top_indices = scores[0].argsort()[-n:][::-1].tolist()
-            logging.info(f"Found {len(top_indices)
-                                  } similar manga based on preferences")
+            logging.info(f"Found {len(top_indices)} similar manga based on preferences")
             return top_indices
         except Exception as e:
             logging.error(f"find_similar failed: {str(e)}")
