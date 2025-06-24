@@ -121,9 +121,7 @@ def get_recommendations():
 
         ai_session.update_preferences(indices)
 
-        new_indices = ai_session.get_recommendations()
-        recommendations = [ai_session.recommender.data[i]
-                           for i in new_indices[:10]]
+        recommendations = ai_session.get_recommendations()[:10]
 
         return jsonify({'recommendations': recommendations})
     except Exception as e:

@@ -11,6 +11,7 @@ const topMangaSection = document.getElementById('top-manga-section');
 const questionnaireBtn = document.getElementById('questionnaire-btn');
 const closeQuestionnaireBtn = document.getElementById('close-questionnaire');
 const tryAgainBtn = document.getElementById('try-again-btn');
+const refreshButton = document.getElementById('refresh-btn');
 
 let likedMangaIds = new Set();
 let currentSessionId = null;
@@ -69,6 +70,8 @@ function setupEventListeners() {
   closeModal.addEventListener('click', () => {
     modal.style.display = 'none';
   });
+
+  refreshButton.addEventListener('click', refreshRecommendations);
 
   window.addEventListener('click', (event) => {
     if (event.target === modal) {
@@ -362,6 +365,34 @@ function showMangaDetails(manga) {
   modal.style.display = 'block';
 }
 
+async function refreshRecommendations() {
+  console.log(currentSessionId, likedMangaIds);
+  if (!currentSessionId) return;
+
+  refreshButton.disabled = true;
+  refreshButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
+  try {
+    const response = await fetch('/api/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: currentSessionId,
+        likes: Array.from(likedMangaIds)
+      })
+    });
+
+    const data = await response.json();
+    personalizedData = data.recommendations;  // Update personalizedData
+    displayManga(personalizedData, personalizedContainer);  // Render to correct container
+    showNotification('Recommendations updated!');
+  } catch (error) {
+    showNotification(`Error: ${error.message}`, 'error');
+  } finally {
+    refreshButton.disabled = false;
+    refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+  }
+}
 
 function showNotification(message, type = 'success') {
   const notification = document.createElement('div');
@@ -377,3 +408,4 @@ function showNotification(message, type = 'success') {
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
+

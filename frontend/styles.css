@@ -897,3 +897,32 @@ footer {
     position: relative;
     transition: opacity 0.3s ease;
 }
+.refresh-container {
+    text-align: center;
+    margin: 50px 0;
+}
+
+#refresh-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 15px rgba(138, 43, 226, 0.4);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#refresh-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(138, 43, 226, 0.6);
+}
+
+#refresh-btn:active {
+    transform: translateY(1px);
+}
