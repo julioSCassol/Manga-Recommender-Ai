@@ -62,7 +62,6 @@ def create_session():
             'avg_rating': preferences.get('min_rating', 7.0)
         }
 
-        app.logger.info(f"Initial preferences: {initial_user_prefs}")
         ai_session.user_profile['initial_prefs'] = initial_user_prefs
 
         initial_indices = ai_session.recommender.find_similar(
@@ -70,7 +69,6 @@ def create_session():
         )
 
         if not initial_indices:
-            app.logger.warning("Using fallback recommendations")
             initial_indices = list(
                 range(min(10, len(ai_session.recommender.data))))
 

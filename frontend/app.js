@@ -20,10 +20,8 @@ let personalizedData = [];
 
 const originalQuestionnaireHTML = questionnaireSection.innerHTML;
 
-console.log("Frontend initialized");
 
 async function initApp() {
-  console.log("Initializing application...");
   await loadTopManga();
   setupEventListeners();
 }
@@ -39,7 +37,6 @@ async function loadTopManga() {
     }
 
     topMangaData = data.top_manga;
-    console.log("Received top manga data:", topMangaData);
     displayManga(topMangaData, mangaContainer);
     loadingElement.style.display = 'none';
   } catch (error) {
@@ -156,7 +153,6 @@ async function submitQuestionnaire() {
     min_rating: minRating
   };
 
-  console.log("Submitting preferences:", preferences);
 
   const loader = document.createElement('div');
   loader.className = 'loading-full';
@@ -178,7 +174,6 @@ async function submitQuestionnaire() {
     });
 
     const data = await response.json();
-    console.log("Session API response:", data);
 
     if (data.error) {
       throw new Error(data.error);
@@ -219,7 +214,6 @@ async function submitQuestionnaire() {
 }
 
 function displayManga(mangaList, container) {
-  console.log("Displaying manga:", mangaList);
   container.innerHTML = '';
 
   if (!mangaList || mangaList.length === 0) {
@@ -366,7 +360,6 @@ function showMangaDetails(manga) {
 }
 
 async function refreshRecommendations() {
-  console.log(currentSessionId, likedMangaIds);
   if (!currentSessionId) return;
 
   refreshButton.disabled = true;
