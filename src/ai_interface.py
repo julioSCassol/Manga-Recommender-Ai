@@ -28,7 +28,6 @@ class AISession:
             raise ValueError("Failed to initialize AI session") from e
 
     def _normalize_features(self):
-        """Normalizes numerical features like year and rating."""
         if not self.recommender or not hasattr(self.recommender, 'data') or not self.recommender.data:
             print(
                 "Recommender not initialized or data is empty for normalization.")

@@ -9,7 +9,7 @@ import base64
 
 
 class MangaAPIClient:
-    def __init__(self, max_cache_age: int = 60, cache_dir: str = ".manga_cache", cache_filename: str = "cache.json"):
+    def __init__(self, max_cache_age: int = 99999999, cache_dir: str = ".manga_cache", cache_filename: str = "cache.json"):
         self.base_url = "https://api.mangadex.org"
         self.cache: Dict = {}
         self.max_cache_age = timedelta(minutes=max_cache_age)
@@ -20,8 +20,6 @@ class MangaAPIClient:
         self.session.headers.update({
             'User-Agent': 'MangaAI/1.0 (+https://github.com/your-repo)'
         })
-        self.last_cache_clean = datetime.now()
-
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(exist_ok=True)
         self.cache_filepath = self.cache_dir / \
@@ -147,35 +145,6 @@ class MangaAPIClient:
     def _generate_cache_key(self, params: Dict) -> tuple:
         return tuple(sorted((k, tuple(v) if isinstance(v, list) else v)
                             for k, v in params.items()))
-
-    def _is_cache_valid(self, cache_key: tuple) -> bool:
-        if cache_key not in self.cache:
-            return False
-        if 'timestamp' not in self.cache[cache_key]:
-            print(f"Cache entry for {
-                  cache_key} is missing 'timestamp'. Considering invalid.")
-            return False
-        return datetime.now() - self.cache[cache_key]['timestamp'] < self.max_cache_age
-
-    def _clean_old_cache(self):
-        if datetime.now() - self.last_cache_clean < timedelta(minutes=5):
-            return
-
-        self.last_cache_clean = datetime.now()
-
-        keys_to_delete = []
-        for key, entry in list(self.cache.items()):
-            if 'timestamp' not in entry or datetime.now() - entry['timestamp'] > self.max_cache_age:
-                keys_to_delete.append(key)
-
-        for key in keys_to_delete:
-            del self.cache[key]
-
-        if keys_to_delete:
-            self._save_persistent_cache()
-        else:
-            print("No expired cache entries found to clean.")
-
     def search_manga(self, filters: Dict, limit: int = 100) -> List[Dict]:
         all_results = []
         current_offset = 0
@@ -188,16 +157,13 @@ class MangaAPIClient:
                 limit - total_manga_retrieved, 100), current_offset)
             cache_key = self._generate_cache_key(params)
 
-            self._clean_old_cache()
-
-            if self._is_cache_valid(cache_key):
-                page_results = self.cache[cache_key]['data']
-                all_results.extend(page_results)
-                total_manga_retrieved += len(page_results)
-                current_offset += len(page_results)
-                if len(page_results) < min(limit - total_manga_retrieved + len(page_results), 100):
-                    break
-                continue
+            page_results = self.cache[cache_key]['data']
+            all_results.extend(page_results)
+            total_manga_retrieved += len(page_results)
+            current_offset += len(page_results)
+            if len(page_results) < min(limit - total_manga_retrieved + len(page_results), 100):
+                break
+            continue
 
             response = self._safe_request(
                 method='GET',
@@ -379,8 +345,6 @@ class MangaAPIClient:
     def _get_creator_details(self, creator_id: str) -> str:
         cache_key = (
             "creator_details", creator_id)
-
-        self._clean_old_cache()
 
         if self._is_cache_valid(cache_key):
             return self.cache[cache_key]['data']
