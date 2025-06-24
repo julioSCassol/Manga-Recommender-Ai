@@ -2,40 +2,33 @@ from flask import Flask, render_template, jsonify, request
 from src.api_client import MangaAPIClient
 from src.ai_interface import AISession
 import uuid
-import logging
+
 
 app = Flask(__name__, static_folder='frontend', static_url_path='')
 sessions = {}
-logging.basicConfig(level=logging.INFO)
-
 
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
-
-# New endpoint to get top manga
-
 
 @app.route('/api/top-manga', methods=['GET'])
 def get_top_manga():
     try:
         api = MangaAPIClient()
 
-        # Fetch top manga with high ratings
         top_manga = api.search_manga({
             'content_rating': ['safe', 'suggestive'],
             'order[rating]': 'desc',
             'limit': 100
         })
 
-        # Sort by rating descending
         top_manga.sort(key=lambda x: x.get('rating', 0), reverse=True)
 
         return jsonify({
-            'top_manga': top_manga[:100]  # Return top 100
+            'top_manga': top_manga[:100]
         })
     except Exception as e:
-        logging.error(f"Failed to fetch top manga: {str(e)}")
+        print.error(f"Failed to fetch top manga: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -48,7 +41,6 @@ def create_session():
         ai_session = AISession(api)
         ai_session.start_session()
 
-        # Map time period to average year
         period_map = {
             '1990s': 1995,
             '2000s': 2005,
@@ -59,7 +51,6 @@ def create_session():
         }
         avg_year = period_map.get(preferences.get('time_period', 'any'), None)
 
-        # Create initial preferences
         initial_user_prefs = {
             'keywords': preferences.get('genres', []) + preferences.get('themes', []),
             'genres': preferences.get('genres', []),
@@ -94,7 +85,7 @@ def create_session():
             'recommendations': recommendations
         })
     except Exception as e:
-        logging.error(f"Session creation failed: {str(e)}")
+        print.error(f"Session creation failed: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -117,7 +108,7 @@ def get_recommendations():
                 idx = manga_ids.index(id)
                 indices.append(idx)
             except ValueError:
-                logging.warning(f"Manga ID {id} not found in dataset")
+                print.warning(f"Manga ID {id} not found in dataset")
 
         ai_session.update_preferences(indices)
 
@@ -125,7 +116,7 @@ def get_recommendations():
 
         return jsonify({'recommendations': recommendations})
     except Exception as e:
-        logging.error(f"Recommendation failed: {str(e)}")
+        print.error(f"Recommendation failed: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 

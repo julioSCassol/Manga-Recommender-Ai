@@ -1,13 +1,6 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-import logging
 from .recommender import MangaRecommender
-
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-
 
 class AISession:
     def __init__(self, api_client):
@@ -21,11 +14,8 @@ class AISession:
         Initializes the AI session by fetching manga data.
         It relies on api_client.search_manga to get already processed and enriched data
         efficiently, avoiding individual get_manga_details calls for bulk loading.
-        """
-        logging.info("Starting AI session: Fetching initial manga data...")
-        
+        """        
         try:
-            # Fetch initial manga data
             initial_data = self.api.search_manga({
                 'limit': 1000
             })
@@ -33,24 +23,19 @@ class AISession:
             if not initial_data:
                 raise ValueError("No initial manga data found from API search.")
             
-            # Initialize recommender
-            logging.info("Creating MangaRecommender instance...")
             self.recommender = MangaRecommender(initial_data)
-            logging.info(f"Initialized recommender with {len(initial_data)} manga entries")
             
-            # Normalize features
             self._normalize_features()
-            logging.info("Feature normalization complete")
             
         except Exception as e:
-            logging.error(f"Failed to initialize session: {str(e)}")
-            logging.exception("Full exception traceback:")
+            print.error(f"Failed to initialize session: {str(e)}")
+            print.exception("Full exception traceback:")
             raise ValueError("Failed to initialize AI session") from e
 
     def _normalize_features(self):
         """Normalizes numerical features like year and rating."""
         if not self.recommender or not hasattr(self.recommender, 'data') or not self.recommender.data:
-            logging.warning(
+            print.warning(
                 "Recommender not initialized or data is empty for normalization.")
             return
 
@@ -90,7 +75,7 @@ class AISession:
         This forms the basis for personalized recommendations.
         """
         if not self.recommender or not hasattr(self.recommender, 'data') or not self.recommender.data:
-            logging.warning(
+            print.warning(
                 "Recommender not initialized or data is empty. Cannot update preferences.")
             return
 
@@ -98,7 +83,7 @@ class AISession:
                         if 0 <= i < len(self.recommender.data)]
 
         if not liked_mangas:
-            logging.info(
+            print.info(
                 "No valid liked manga indices provided. User profile not updated.")
             return
 
@@ -140,27 +125,23 @@ class AISession:
             'preferred_status': list(set(m.get('status', '') for m in liked_mangas if m.get('status')))
         }
         print(self.user_profile['preferences'])
-        logging.info("User preferences updated based on liked manga.")
 
     def get_recommendations(self):
         if not self.recommender or not hasattr(self.recommender, 'data') or not self.recommender.data:
-            logging.warning(
+            print.warning(
                 "Recommender not initialized or data is empty. Cannot generate recommendations.")
             return []
 
-        # Use recommender for personalized results
         preferences = self.user_profile.get(
             'preferences') or self.user_profile.get('initial_prefs')
         
         if preferences:
-            logging.info("Generating recommendations using user preferences.")
-            # Get recommendations based on preferences
+            print.info("Generating recommendations using user preferences.")
             indices = self.recommender.find_similar(preferences, n=50)
             return [self.recommender.data[i] for i in indices]
         else:
-            logging.info(
+            print.info(
                 "No user preferences found in profile. Returning a default set of top manga from the loaded data.")
-            # Return top rated from the initial dataset, not from API
             sorted_data = sorted(self.recommender.data, 
                                 key=lambda x: x.get('rating', 0), 
                                 reverse=True)

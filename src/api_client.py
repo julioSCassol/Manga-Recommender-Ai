@@ -205,9 +205,6 @@ class MangaAPIClient:
 
         try:
             while total_processed < limit:
-                # current_params = params.copy()
-                # current_params['offset'] = len(all_results)
-                #
                 response = self._safe_request(
                     method='GET',
                     url=f"{self.base_url}/manga",
@@ -243,9 +240,6 @@ class MangaAPIClient:
         """Construct and validate API parameters"""
         params = {
             'limit': min(limit, 100),
-            # 'includes[]': ['author', 'artist', 'cover_art', 'tag'],
-            # 'contentRating[]': filters.get('content_rating', ['safe', 'suggestive']),
-            # 'order[rating]': 'desc'
         }
 
         param_mapping = {

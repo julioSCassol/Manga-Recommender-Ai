@@ -383,8 +383,8 @@ async function refreshRecommendations() {
     });
 
     const data = await response.json();
-    personalizedData = data.recommendations;  // Update personalizedData
-    displayManga(personalizedData, personalizedContainer);  // Render to correct container
+    personalizedData = data.recommendations;  
+    displayManga(personalizedData, personalizedContainer); 
     showNotification('Recommendations updated!');
   } catch (error) {
     showNotification(`Error: ${error.message}`, 'error');
