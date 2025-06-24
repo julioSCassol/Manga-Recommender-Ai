@@ -110,11 +110,12 @@ class MangaRecommender:
 
         # Combine all features into single sparse matrix
         rating_weight = 6.0  # Adjust this value as needed
+        content_rating_weight = 10.0  # Adjust this value as needed
         self.feature_matrix = hstack(
             [self.tfidf_matrix,
              self.genre_matrix,
              self.publication_type_matrix,
-             self.content_rating_matrix,
+             self.content_rating_matrix * content_rating_weight,
              self.status_matrix,
              self.normalized_ratings * rating_weight
              ]).tocsr()

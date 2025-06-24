@@ -27,7 +27,6 @@ class AISession:
         try:
             # Fetch initial manga data
             initial_data = self.api.search_manga({
-                'content_rating': ['safe', 'suggestive'],
                 'limit': 1000
             })
             
@@ -140,6 +139,7 @@ class AISession:
             'preferred_demographics': list(set(m.get('demographic', '') for m in liked_mangas if m.get('demographic'))),
             'preferred_status': list(set(m.get('status', '') for m in liked_mangas if m.get('status')))
         }
+        print(self.user_profile['preferences'])
         logging.info("User preferences updated based on liked manga.")
 
     def get_recommendations(self):
