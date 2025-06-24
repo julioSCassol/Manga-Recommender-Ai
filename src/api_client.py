@@ -18,7 +18,7 @@ class MangaAPIClient:
         self.max_retries = 3
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'MangaAI/1.0 (+https://github.com/your-repo)'
+            'User-Agent': 'MangaAI/1.0 (+https://github.com/julioSCassol/Manga-Recommender-Ai)'
         })
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(exist_ok=True)
