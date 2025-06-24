@@ -28,7 +28,7 @@ def get_top_manga():
             'top_manga': top_manga[:100]
         })
     except Exception as e:
-        print.error(f"Failed to fetch top manga: {str(e)}")
+        print(f"Failed to fetch top manga: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -83,7 +83,7 @@ def create_session():
             'recommendations': recommendations
         })
     except Exception as e:
-        print.error(f"Session creation failed: {str(e)}")
+        print(f"Session creation failed: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -106,7 +106,7 @@ def get_recommendations():
                 idx = manga_ids.index(id)
                 indices.append(idx)
             except ValueError:
-                print.warning(f"Manga ID {id} not found in dataset")
+                print(f"Manga ID {id} not found in dataset")
 
         ai_session.update_preferences(indices)
 
@@ -114,7 +114,7 @@ def get_recommendations():
 
         return jsonify({'recommendations': recommendations})
     except Exception as e:
-        print.error(f"Recommendation failed: {str(e)}")
+        print(f"Recommendation failed: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 

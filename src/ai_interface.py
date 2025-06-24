@@ -28,14 +28,14 @@ class AISession:
             self._normalize_features()
             
         except Exception as e:
-            print.error(f"Failed to initialize session: {str(e)}")
-            print.exception("Full exception traceback:")
+            print(f"Failed to initialize session: {str(e)}")
+            print("Full exception traceback:")
             raise ValueError("Failed to initialize AI session") from e
 
     def _normalize_features(self):
         """Normalizes numerical features like year and rating."""
         if not self.recommender or not hasattr(self.recommender, 'data') or not self.recommender.data:
-            print.warning(
+            print(
                 "Recommender not initialized or data is empty for normalization.")
             return
 
@@ -75,7 +75,7 @@ class AISession:
         This forms the basis for personalized recommendations.
         """
         if not self.recommender or not hasattr(self.recommender, 'data') or not self.recommender.data:
-            print.warning(
+            print(
                 "Recommender not initialized or data is empty. Cannot update preferences.")
             return
 
@@ -83,7 +83,7 @@ class AISession:
                         if 0 <= i < len(self.recommender.data)]
 
         if not liked_mangas:
-            print.info(
+            print(
                 "No valid liked manga indices provided. User profile not updated.")
             return
 
@@ -128,7 +128,7 @@ class AISession:
 
     def get_recommendations(self):
         if not self.recommender or not hasattr(self.recommender, 'data') or not self.recommender.data:
-            print.warning(
+            print(
                 "Recommender not initialized or data is empty. Cannot generate recommendations.")
             return []
 
@@ -136,11 +136,11 @@ class AISession:
             'preferences') or self.user_profile.get('initial_prefs')
         
         if preferences:
-            print.info("Generating recommendations using user preferences.")
+            print("Generating recommendations using user preferences.")
             indices = self.recommender.find_similar(preferences, n=50)
             return [self.recommender.data[i] for i in indices]
         else:
-            print.info(
+            print(
                 "No user preferences found in profile. Returning a default set of top manga from the loaded data.")
             sorted_data = sorted(self.recommender.data, 
                                 key=lambda x: x.get('rating', 0), 
