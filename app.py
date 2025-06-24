@@ -7,9 +7,11 @@ import uuid
 app = Flask(__name__, static_folder='frontend', static_url_path='')
 sessions = {}
 
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
+
 
 @app.route('/api/top-manga', methods=['GET'])
 def get_top_manga():
@@ -19,8 +21,7 @@ def get_top_manga():
         top_manga = api.search_manga({
             'content_rating': ['safe', 'suggestive'],
             'order[rating]': 'desc',
-            'limit': 100
-        })
+        }, limit=1000)
 
         top_manga.sort(key=lambda x: x.get('rating', 0), reverse=True)
 

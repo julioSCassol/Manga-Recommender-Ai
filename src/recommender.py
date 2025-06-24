@@ -95,7 +95,7 @@ class MangaRecommender:
         self.status_matrix = self.mlb_statuses.fit_transform(status_data)
 
         rating_weight = 6.0
-        content_rating_weight = 10.0
+        content_rating_weight = 20.0
         self.feature_matrix = hstack(
             [self.tfidf_matrix,
              self.genre_matrix,
@@ -106,10 +106,6 @@ class MangaRecommender:
              ]).tocsr()
 
     def find_similar(self, user_preferences, n=10):
-        """
-        Content-based filtering for initial recommendations.
-        Uses keywords, genres, and preferred_publication_types.
-        """
         try:
             pref_text = " ".join(user_preferences.get('keywords', []))
             pref_vector = self.tfidf.transform([pref_text])

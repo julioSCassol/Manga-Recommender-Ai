@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from .recommender import MangaRecommender
 
+
 class AISession:
     def __init__(self, api_client):
         self.api = api_client
@@ -10,23 +11,17 @@ class AISession:
         self.scaler = MinMaxScaler()
 
     def start_session(self):
-        """
-        Initializes the AI session by fetching manga data.
-        It relies on api_client.search_manga to get already processed and enriched data
-        efficiently, avoiding individual get_manga_details calls for bulk loading.
-        """        
         try:
-            initial_data = self.api.search_manga({
-                'limit': 1000
-            })
-            
+            initial_data = self.api.search_manga({}, limit=1000)
+
             if not initial_data:
-                raise ValueError("No initial manga data found from API search.")
-            
+                raise ValueError(
+                    "No initial manga data found from API search.")
+
             self.recommender = MangaRecommender(initial_data)
-            
+
             self._normalize_features()
-            
+
         except Exception as e:
             print(f"Failed to initialize session: {str(e)}")
             print("Full exception traceback:")
@@ -70,10 +65,6 @@ class AISession:
                     manga['normalized_rating'] = 0.5
 
     def update_preferences(self, liked_indices):
-        """
-        Updates user preferences based on a list of liked manga indices.
-        This forms the basis for personalized recommendations.
-        """
         if not self.recommender or not hasattr(self.recommender, 'data') or not self.recommender.data:
             print(
                 "Recommender not initialized or data is empty. Cannot update preferences.")
@@ -134,7 +125,7 @@ class AISession:
 
         preferences = self.user_profile.get(
             'preferences') or self.user_profile.get('initial_prefs')
-        
+
         if preferences:
             print("Generating recommendations using user preferences.")
             indices = self.recommender.find_similar(preferences, n=50)
@@ -142,54 +133,7 @@ class AISession:
         else:
             print(
                 "No user preferences found in profile. Returning a default set of top manga from the loaded data.")
-            sorted_data = sorted(self.recommender.data, 
-                                key=lambda x: x.get('rating', 0), 
-                                reverse=True)
+            sorted_data = sorted(self.recommender.data,
+                                 key=lambda x: x.get('rating', 0),
+                                 reverse=True)
             return sorted_data[:10]
-
-    def get_similarity_reason(self, manga_idx):
-        """
-        Explains why a specific manga was recommended based on user preferences.
-        """
-        if (not self.recommender or not hasattr(self.recommender, 'data') or not self.recommender.data or
-            'preferences' not in self.user_profile or
-            not self.user_profile['preferences'] or
-                not (0 <= manga_idx < len(self.recommender.data))):
-            return "Based on general preferences or initial data."
-
-        manga = self.recommender.data[manga_idx]
-        prefs = self.user_profile['preferences']
-        reasons = []
-
-        common_genres = set(manga.get('genres', [])) & set(
-            prefs['genres'].keys()) if isinstance(prefs.get('genres'), dict) else set()
-        if common_genres:
-            reasons.append(f"Similar genres: {', '.join(common_genres)}")
-
-        common_themes = set(manga.get('themes', [])) & set(
-            prefs['themes'].keys()) if isinstance(prefs.get('themes'), dict) else set()
-        if common_themes:
-            reasons.append(f"Similar themes: {', '.join(common_themes)}")
-
-        common_authors = set(manga.get('authors', [])) & set(
-            prefs['authors'].keys()) if isinstance(prefs.get('authors'), dict) else set()
-        if common_authors:
-            reasons.append(f"Similar authors: {', '.join(common_authors)}")
-
-        if prefs.get('avg_year') is not None and manga.get('year') is not None and abs(manga['year'] - prefs['avg_year']) <= 5:
-            reasons.append(f"Similar publication year ({manga['year']})")
-
-        if prefs.get('avg_rating') is not None and manga.get('rating') is not None and abs(manga['rating'] - prefs['avg_rating']) <= 1.0:
-            reasons.append(f"Similar average rating ({manga['rating']:.1f})")
-
-        if prefs.get('preferred_content_rating') and manga.get('contentRating') in prefs['preferred_content_rating']:
-            reasons.append(f"Matches preferred content rating ({manga['contentRating']})")
-
-        if prefs.get('preferred_demographics') and manga.get('demographic') in prefs['preferred_demographics']:
-            reasons.append(
-                f"Matches preferred demographic ({manga['demographic']})")
-
-        if prefs.get('preferred_status') and manga.get('status') in prefs['preferred_status']:
-            reasons.append(f"Matches preferred status ({manga['status']})")
-
-        return "; ".join(reasons) if reasons else "No specific similarity information available based on current preferences."

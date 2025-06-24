@@ -29,9 +29,6 @@ class MangaAPIClient:
         self._load_persistent_cache()
 
     def _convert_datetimes_to_iso(self, obj):
-        """
-        Recursively converts datetime objects in dicts and lists to ISO 8601 strings.
-        """
         if isinstance(obj, datetime):
             return obj.isoformat()
         elif isinstance(obj, dict):
@@ -42,9 +39,6 @@ class MangaAPIClient:
             return obj
 
     def _convert_iso_to_datetimes(self, obj):
-        """
-        Recursively converts ISO 8601 strings in dicts and lists to datetime objects.
-        """
         if isinstance(obj, str):
             try:
                 parsed_dt = parser.parse(obj)
@@ -63,9 +57,6 @@ class MangaAPIClient:
             return obj
 
     def _make_hashable(self, obj):
-        """
-        Recursively converts lists to tuples to make an object hashable.
-        """
         if isinstance(obj, list):
             return tuple(self._make_hashable(elem) for elem in obj)
         elif isinstance(obj, dict):
@@ -82,7 +73,6 @@ class MangaAPIClient:
             return obj
 
     def _save_persistent_cache(self):
-        """Save the entire in-memory cache to the single cache.json file."""
         try:
             serializable_cache = {}
             for key, entry in self.cache.items():
@@ -106,12 +96,13 @@ class MangaAPIClient:
             with open(self.cache_filepath, 'w', encoding='utf-8') as f:
                 json.dump(serializable_cache, f, indent=2)
         except Exception as e:
-            print(f"Failed to save entire cache to {self.cache_filepath}: {str(e)}")
+            print(f"Failed to save entire cache to {
+                  self.cache_filepath}: {str(e)}")
 
     def _load_persistent_cache(self):
-        """Load the entire cache from the single cache.json file."""
         if not self.cache_filepath.exists():
-            print(f"No cache file found at {self.cache_filepath}. Starting with empty cache.")
+            print(f"No cache file found at {
+                  self.cache_filepath}. Starting with empty cache.")
             return
 
         try:
@@ -154,21 +145,19 @@ class MangaAPIClient:
                     f"Failed to rename corrupt cache file: {unlink_error}")
 
     def _generate_cache_key(self, params: Dict) -> tuple:
-        """Generate a unique key for API request parameters"""
         return tuple(sorted((k, tuple(v) if isinstance(v, list) else v)
                             for k, v in params.items()))
 
     def _is_cache_valid(self, cache_key: tuple) -> bool:
-        """Check if cached data is still valid"""
         if cache_key not in self.cache:
             return False
         if 'timestamp' not in self.cache[cache_key]:
-            print(f"Cache entry for {cache_key} is missing 'timestamp'. Considering invalid.")
+            print(f"Cache entry for {
+                  cache_key} is missing 'timestamp'. Considering invalid.")
             return False
         return datetime.now() - self.cache[cache_key]['timestamp'] < self.max_cache_age
 
     def _clean_old_cache(self):
-        """Clean up old cache entries in memory and then save the cleaned cache."""
         if datetime.now() - self.last_cache_clean < timedelta(minutes=5):
             return
 
@@ -188,58 +177,68 @@ class MangaAPIClient:
             print("No expired cache entries found to clean.")
 
     def search_manga(self, filters: Dict, limit: int = 100) -> List[Dict]:
-        """
-        Search manga with persistent caching
-        """
-        params = self._build_params(filters, limit)
-        cache_key = self._generate_cache_key(params)
-
-        self._clean_old_cache()
-
-        if self._is_cache_valid(cache_key):
-            return self.cache[cache_key]['data']
-
         all_results = []
+        current_offset = 0
+        total_manga_retrieved = 0
         retrieval_time = datetime.now()
-        total_processed = 0
 
-        try:
-            while total_processed < limit:
-                response = self._safe_request(
-                    method='GET',
-                    url=f"{self.base_url}/manga",
-                    params=params,
-                    retries=self.max_retries
-                )
+        i = 0
+        while total_manga_retrieved < limit:
+            params = self._build_params(filters, min(
+                limit - total_manga_retrieved, 100), current_offset)
+            cache_key = self._generate_cache_key(params)
 
-                if not response:
+            self._clean_old_cache()
+
+            if self._is_cache_valid(cache_key):
+                page_results = self.cache[cache_key]['data']
+                all_results.extend(page_results)
+                total_manga_retrieved += len(page_results)
+                current_offset += len(page_results)
+                if len(page_results) < min(limit - total_manga_retrieved + len(page_results), 100):
                     break
+                continue
 
+            response = self._safe_request(
+                method='GET',
+                url=f"{self.base_url}/manga",
+                params=params,
+                retries=self.max_retries
+            )
+            i += 1
+            print(i)
+
+            if not response:
+                break
+
+            try:
                 data = response.json()
-                processed = self._process_results(data)
-                all_results.extend(processed)
-                total_processed += len(processed)
+                processed_page_results = self._process_results(data)
+                all_results.extend(processed_page_results)
+                total_manga_retrieved += len(processed_page_results)
 
-                if data.get('total', 0) <= total_processed or len(processed) == 0:
+                self.cache[cache_key] = {
+                    'timestamp': datetime.now(),
+                    'retrieval_time': retrieval_time,
+                    'data': processed_page_results
+                }
+                self._save_persistent_cache()
+
+                if data.get('total', 0) <= total_manga_retrieved or len(processed_page_results) == 0:
                     break
 
-        except Exception as e:
-            print(f"Manga search failed: {str(e)}")
-            return []
+                current_offset += len(processed_page_results)
 
-        self.cache[cache_key] = {
-            'timestamp': datetime.now(),
-            'retrieval_time': retrieval_time,
-            'data': all_results[:limit]
-        }
-        self._save_persistent_cache()
+            except Exception as e:
+                print(f"Error processing manga search page: {str(e)}")
+                break
 
         return all_results[:limit]
 
-    def _build_params(self, filters: Dict, limit: int) -> Dict:
-        """Construct and validate API parameters"""
+    def _build_params(self, filters: Dict, limit: int, offset: int = 0) -> Dict:
         params = {
-            'limit': min(limit, 100),
+            'limit': limit,
+            'offset': offset
         }
 
         param_mapping = {
@@ -247,7 +246,7 @@ class MangaAPIClient:
             'authors': 'authors',
             'artists': 'artists',
             'last_chapter_date': 'updatedAtSince',
-            'genres': 'includedTags',
+            'genres': 'includedTags[]',
             'language': 'originalLanguage[]',
             'publication_type': 'publicationDemographic[]',
             'status': 'status[]'
@@ -255,12 +254,14 @@ class MangaAPIClient:
 
         for key, api_key in param_mapping.items():
             if key in filters:
-                params[api_key] = filters[key]
+                if isinstance(filters[key], list):
+                    params[api_key] = filters[key]
+                else:
+                    params[api_key] = [filters[key]]
 
         return params
 
     def get_manga_rating(self, manga_id: str) -> float:
-        """Get manga rating with error handling"""
         try:
             response = self._safe_request(
                 'GET', f"{self.base_url}/statistics/manga/{manga_id}")
@@ -277,7 +278,6 @@ class MangaAPIClient:
         return 0
 
     def _process_results(self, data: Dict) -> List[Dict]:
-        """Process API response with error handling"""
         processed = []
         for manga in data.get('data', []):
             try:
@@ -300,8 +300,6 @@ class MangaAPIClient:
                         genres.append(tag_name)
                     elif tag_group == 'theme':
                         themes.append(tag_name)
-
-                print(self.get_manga_rating(manga.get('id', '')))
 
                 processed.append({
                     'id': manga.get('id', ''),
@@ -329,7 +327,6 @@ class MangaAPIClient:
         return processed
 
     def _safe_request(self, method: str, url: str, **kwargs) -> Optional[requests.Response]:
-        """Execute request with retries and error handling"""
         retries = kwargs.pop('retries', self.max_retries)
         for attempt in range(retries + 1):
             try:
@@ -355,7 +352,6 @@ class MangaAPIClient:
         return None
 
     def _get_statistics(self, manga_id: str) -> Dict:
-        """Get statistics with error handling"""
         try:
             response = self._safe_request(
                 'GET',
@@ -367,7 +363,6 @@ class MangaAPIClient:
             return {}
 
     def _safe_get_creators(self, relationships: List[Dict], role: str) -> List[str]:
-        """Get creators with error handling"""
         try:
             return [
                 self._get_creator_details(r['id'])
@@ -382,7 +377,6 @@ class MangaAPIClient:
         return [r for r in relationships if r.get('type') == type_]
 
     def _get_creator_details(self, creator_id: str) -> str:
-        """Get creator details with caching"""
         cache_key = (
             "creator_details", creator_id)
 
@@ -412,7 +406,6 @@ class MangaAPIClient:
         return "Unknown"
 
     def _safe_find_cover_art(self, relationships: List[Dict], mangaId) -> Optional[str]:
-        """Find cover art URL safely"""
         try:
             cover_art_relationship = next(
                 (r for r in relationships if r.get('type') == 'cover_art'), None)
@@ -420,7 +413,8 @@ class MangaAPIClient:
             if cover_art_relationship:
                 response = self._safe_request(
                     'GET',
-                    f"https://api.mangadex.org/cover/{cover_art_relationship['id']}"
+                    f"https://api.mangadex.org/cover/{
+                        cover_art_relationship['id']}"
                 )
                 if response:
                     data = response.json()
@@ -434,6 +428,5 @@ class MangaAPIClient:
             return None
 
     def __del__(self):
-        """Ensure cache is saved on object destruction."""
         self.session.close()
         self._save_persistent_cache()
